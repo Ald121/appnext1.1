@@ -14,7 +14,10 @@ class Usuarios extends Authenticatable
      *
      * @var array
      */
-    protected $connection='usuarioconex';
+    public $connection='usuarioconex';
+     protected $primaryKey='id';
+     public $timestamps=false;
+     public $incrementing=false;
     protected $fillable = [
         'id', 'nick', 'clave_clave',
     ];
@@ -25,10 +28,15 @@ class Usuarios extends Authenticatable
      * @var array
      */
     protected $hidden = [
-        'clave_clave',
+        // 'clave_clave',
     ];
 
     public function getAuthPassword() {
     return $this->clave_clave;
+    }
+
+    public function changeConnection($conn)
+    {
+       return $this->connection = $conn;
     }
 }

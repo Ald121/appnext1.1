@@ -126,6 +126,18 @@ return [
             'schema' => 'usuarios',
             'sslmode' => 'prefer',
         ],
+        'auditoriaconex' => [
+            'driver' => 'pgsql',
+            'host' => 'localhost',
+            'port' =>  '5432',
+            'database' =>  'NEXTBOOK',
+            'username' => 'postgres',
+            'password' => 'rootdow',
+            'charset' => 'utf8',
+            'prefix' => '',
+            'schema' => 'auditoria',
+            'sslmode' => 'prefer',
+        ],
 
     ],
 

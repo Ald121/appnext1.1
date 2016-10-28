@@ -23,14 +23,13 @@ Route::group(['middleware' => 'cors'], function(){
     // --------------------- Buscar Empresa----------------------------------
     Route::post('Buscar_Informacion_Ruc', 'RegistroController@Buscar_Informacion_Ruc');
     // --------------------- GET provincias ----------------------------------
-    Route::post('Get_Provincias', 'RegistroController@Get_Provincias');
+    Route::post('Get_Provincias', 'RegistroController@Get_Provincias'); 
     // --------------------- ACTIVAR CUENTA  ----------------------------------
     Route::post('Activar_Cuenta', 'RegistroController@Activar_Cuenta');
     // Ingreso
      Route::post('Acceso','loginController@Acceso');
 
-    Route::group(['middleware' => ['jwt.auth']], function ()
+    Route::group(['middleware' => ['auth.nextbook']], function ()
     { 
-       
     });
 });

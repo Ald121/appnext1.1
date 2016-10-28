@@ -14,6 +14,9 @@ use Carbon\Carbon;
 use Mail;
 use GuzzleHttp\Client;
 use DB;
+//-------------------------  autenticacion -------
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
 
 class RegistroController extends Controller
 {
@@ -24,17 +27,18 @@ class RegistroController extends Controller
     	$this->funciones=new Funciones();
       // Extras
       $this->client=new Client();
+      // Autenticacion
+      // $this->user = JWTAuth::parseToken()->authenticate();
     }
 
     public function Buscar_Informacion_Ruc(Request $request){
       $resultado=DB::connection('nextbookconex')->select("SELECT * FROM empresa_ruc('".$request->input('ruc')."')");
       // $resultado = $this->tableEmpresas->select('ruc')->where('ruc', '=', $request->input('ruc'))->get();
-    if (count($resultado) != 0)
+    if (count($resultado)==0)
       {
       $res = $this->client->request('GET', config('global.appserviciosnext').'/public/getDatos', ['json' => ['tipodocumento' => 'RUC', 'nrodocumento' => $request->input('ruc') ]]);
       $respuesta = json_decode($res->getBody()->getContents() , true);
-      // $datos['datosEmpresa']=[];
-      if ($respuesta['datosEmpresa']['valid']!=false) {
+      if ($respuesta['datosEmpresa']['valid']!='false') {
       $modifiedString = str_replace('&nbsp;', null,$respuesta['datosEmpresa']['fecha_inicio_actividades']);
       $respuesta['datosEmpresa']['fecha_inicio_actividades']=$modifiedString;
 
@@ -61,12 +65,17 @@ class RegistroController extends Controller
                                               ));
       return response()->json(["respuesta" => $respuesta], 200);
       }else{
-        return response()->json(["respuesta" => false], 200);
+        return response()->json(["respuesta" => 'false-sri',"error"=>'no-registro-SRI'], 200);
       }
       }
       else
       {
-      return response()->json(["respuesta" => $resultado], 200);
+        $sql=DB::connection('nextbookconex')->select("SELECT ruc_ci FROM empresas WHERE ruc_ci='".$request->input('ruc')."'");
+        if (count($sql)==0) {
+            return response()->json(["respuesta" =>$resultado[0]], 200);
+        }else{
+          return response()->json(["respuesta" =>false,"error"=>'registro-existente'], 200);
+        }
       }
     }
 
@@ -112,27 +121,35 @@ class RegistroController extends Controller
             });
     }
 
+    
     public function enviar_correo_credenciales($data){
         $correo_enviar=$data['correo'];
         $razon_social=$data['razon_social'];
-    Mail::send('email_registro', $data, function($message)use ($correo_enviar,$razon_social)
+    Mail::send('credenciales_ingreso', $data, function($message)use ($correo_enviar,$razon_social)
             {
                 $message->from("registro@oyefm.com",'Nextbook');
-                $message->to($correo_enviar,$razon_social)->subject('Verifica tu cuenta');
+                $message->to($correo_enviar,$razon_social)->subject('Credenciales de Ingreso');
             });
     }
 
     public function Activar_Cuenta(Request $request){
-      $resultado=$this->empresas->where('id_estado','P')->where('ruc_ci',$request->input('ruc'))->get();
+      $resultado=$this->empresas->select('razon_social')->where('id_estado','P')->where('ruc_ci',$request->input('ruc'))->get();
       if (count($resultado)!=0) {
+        $data['correo']=$request->input('correo');
+      $data['razon_social']=$resultado[0]['razon_social'];
+      $data['nombre_comercial']=$resultado[0]['razon_social'];
+      $data['user_nextbook']=$request->input('ruc').'@facturanext.com';
+      $data['pass_nextbook']=$request->input('ruc');
       $resultado=$this->empresas->where('ruc_ci',$request->input('ruc'))->first();
       $name=$resultado->nick;
       $create=DB::connection('infoconex')->statement("CREATE DATABASE $name OWNER $name ");
       if ($create) {
         $update=DB::connection('usuarioconex')->table('usuarios')
-            ->where('clave_clave', $request->input('ruc'))
+            ->where('id', $request->input('ruc'))
                                   ->update(array('id_estado' => 'A','clave_clave'=>bcrypt($request->input('ruc'))));
+        $update=$this->empresas->where('ruc_ci',$request->input('ruc'))->update(['id_estado' => 'A']);
                                   if ($update) {
+                                    $this->enviar_correo_credenciales($data);
                                     return response()->json(["respuesta"=>true]);
                                   }
       }
@@ -141,6 +158,7 @@ class RegistroController extends Controller
     }
 
     public function Get_Provincias(Request $request){
+
       $resultado=DB::connection('localidadesconex')->select("SELECT nombre,id,codigo_telefonico FROM view_localidades WHERE id_padre='00' ORDER BY nombre ASC");
       return response()->json(["respuesta" => $resultado], 200);
     }
