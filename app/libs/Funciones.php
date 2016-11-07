@@ -63,6 +63,10 @@ class Funciones
 
     function paginarDatos($datos,$currentPage,$perPage){
      
+     if ($perPage=='') {
+         $perPage=5;
+     }
+
     Paginator::currentPageResolver(function () use($currentPage)
       {
       return $currentPage;

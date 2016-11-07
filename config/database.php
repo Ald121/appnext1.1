@@ -138,6 +138,18 @@ return [
             'schema' => 'auditoria',
             'sslmode' => 'prefer',
         ],
+        'nextbookPRE' => [
+            'driver' => 'pgsql',
+            'host' => 'localhost',
+            'port' =>  '5432',
+            'database' =>  'NEXTBOOKPRE',
+            'username' => 'postgres',
+            'password' => 'rootdow',
+            'charset' => 'utf8',
+            'prefix' => '',
+            'schema' => 'public',
+            'sslmode' => 'prefer',
+        ],
 
     ],
 
