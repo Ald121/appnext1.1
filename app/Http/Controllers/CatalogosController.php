@@ -23,7 +23,10 @@ class CatalogosController extends Controller
 
     public function Get_Catalogos(Request $request)
     {
+    $currentPage = $request->input('pagina_actual');
+    $limit = $request->input('limit');
     $data=DB::connection('nextbookPRE')->table('inventario.catalogos')->get();
+    $data=$this->funciones->paginarDatos($data,$currentPage,$limit);
     return response()->json(['respuesta' => $data], 200);
     }
 }

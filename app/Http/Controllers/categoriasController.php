@@ -30,7 +30,10 @@ class categoriasController extends Controller
 
     public function Get_Categorias(Request $request)
     {
-    $data=DB::connection('nextbookPRE')->table('inventario.categorias')->select('nombre','descripcion')->get();
+    $currentPage = $request->input('pagina_actual');
+    $limit = $request->input('limit');
+    $data=DB::connection('nextbookPRE')->table('inventario.categorias')->get();
+    $data=$this->funciones->paginarDatos($data,$currentPage,$limit);
     return response()->json(['respuesta' => $data], 200);
     }
 

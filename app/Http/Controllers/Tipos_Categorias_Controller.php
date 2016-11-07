@@ -24,10 +24,8 @@ class Tipos_Categorias_Controller extends Controller
 
     public function Get_Tipo_Categorias(Request $request)
     {
-
     $currentPage = $request->input('pagina_actual');
     $limit = $request->input('limit');
-
     $data=DB::connection('nextbookPRE')->table('inventario.tipos_categorias')->select('nombre','descripcion')->get();
     $data=$this->funciones->paginarDatos($data,$currentPage,$limit);
     return response()->json(['respuesta' => $data], 200);

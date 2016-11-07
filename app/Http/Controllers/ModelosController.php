@@ -20,4 +20,13 @@ class ModelosController extends Controller
     DB::connection('nextbookPRE')->table('inventario.modelos')->insert(['nombre' => $request->input('nombre') , 'descripcion' => $request->input('descripcion') , 'estado' => 'A', 'fecha' => Carbon::now()->toDateString()]);
     return response()->json(['respuesta' => true], 200);
     }
+
+    public function Get_Modelos(Request $request)
+    {
+    $currentPage = $request->input('pagina_actual');
+    $limit = $request->input('limit');
+    $data=DB::connection('nextbookPRE')->table('inventario.modelos')->get();
+    $data=$this->funciones->paginarDatos($data,$currentPage,$limit);
+    return response()->json(['respuesta' => $data], 200);
+    }
 }
