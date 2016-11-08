@@ -8,7 +8,7 @@ use DB;
 use Carbon\Carbon;
 	// Funciones
 use App\libs\Funciones;
-class Tipo_GarantiasController extends Controller
+class Tipos_GarantiasController extends Controller
 {
 
 	public function __construct(){

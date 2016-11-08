@@ -44,10 +44,10 @@ Route::group(['middleware' => 'cors'], function(){
     Route::post('Update_Marca','MarcasController@Update_Marca');
     Route::post('Delete_Marca','MarcasController@Delete_Marca');
     // Tipo Garantias
-    Route::post('Add_Tipo_Garantia','Tipo_GarantiasController@Add_Tipo_Garantia');
-    Route::post('Get_Tipo_Garantias','Tipo_GarantiasController@Get_Tipo_Garantias');
-    Route::post('Update_Tipo_Garantia','Tipo_GarantiasController@Update_Tipo_Garantia');
-    Route::post('Delete_Tipo_Garantia','Tipo_GarantiasController@Delete_Tipo_Garantia');
+    Route::post('Add_Tipo_Garantia','Tipos_GarantiasController@Add_Tipo_Garantia');
+    Route::post('Get_Tipo_Garantias','Tipos_GarantiasController@Get_Tipo_Garantias');
+    Route::post('Update_Tipo_Garantia','Tipos_GarantiasController@Update_Tipo_Garantia');
+    Route::post('Delete_Tipo_Garantia','Tipos_GarantiasController@Delete_Tipo_Garantia');
     // Garantias
     Route::post('Add_Garantia','GarantiasController@Add_Garantia');
     Route::post('Get_Garantias','GarantiasController@Get_Garantias');
