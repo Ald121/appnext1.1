@@ -24,17 +24,29 @@ class categoriasController extends Controller
 
   public function Add_Categoria(Request $request)
     {
-    DB::connection('nextbookPRE')->table('inventario.categorias')->insert(['nombre' => $request->input('nombre') , 'descripcion' => $request->input('descripcion') , 'tipo_categoria' => $request->input('tipo_categoria') , 'estado' => 'A', 'fecha' => Carbon::now()->toDateString()]);
+    DB::connection('nextbookPRE')->table('inventario.categorias')->insert(['nombre' => $request->nombre, 'descripcion' => $request->descripcion, 'tipo_categoria' => $request->tipo_categoria, 'estado' => 'A', 'fecha' => Carbon::now()->toDateString()]);
     return response()->json(['respuesta' => true], 200);
     }
 
     public function Get_Categorias(Request $request)
     {
-    $currentPage = $request->input('pagina_actual');
-    $limit = $request->input('limit');
-    $data=DB::connection('nextbookPRE')->table('inventario.categorias')->get();
+    $currentPage = $request->pagina_actual;
+    $limit = $request->limit;
+    $data=DB::connection('nextbookPRE')->table('inventario.categorias')->where('estado','A')->get();
     $data=$this->funciones->paginarDatos($data,$currentPage,$limit);
     return response()->json(['respuesta' => $data], 200);
+    }
+
+    public function Update_Categoria(Request $request)
+    {
+    $data=DB::connection('nextbookPRE')->table('inventario.categorias')->where('id',$request->id)->update(['nombre' => $request->nombre , 'descripcion' => $request->descripcion,'tipo_categoria' => $request->tipo_categoria]);
+    return response()->json(['respuesta' => true], 200);
+    }
+
+    public function Delete_Categoria(Request $request)
+    {
+    $data=DB::connection('nextbookPRE')->table('inventario.categorias')->where('id',$request->id)->update(['estado'=>'I']);
+    return response()->json(['respuesta' => true], 200);
     }
 
   

@@ -17,16 +17,28 @@ class CatalogosController extends Controller
     }
    public function Add_Catalogo(Request $request)
     {
-    DB::connection('nextbookPRE')->table('inventario.catalogos')->insert(['tipo_catalogo' => $request->input('tipo_catalogo') , 'producto' => $request->input('producto')]);
+    DB::connection('nextbookPRE')->table('inventario.catalogos')->insert(['tipo_catalogo' => $request->tipo_catalogo , 'producto' => $request->producto]);
     return response()->json(['respuesta' => true], 200);
     }
 
     public function Get_Catalogos(Request $request)
     {
-    $currentPage = $request->input('pagina_actual');
-    $limit = $request->input('limit');
+    $currentPage = $request->pagina_actual;
+    $limit = $request->limit;
     $data=DB::connection('nextbookPRE')->table('inventario.catalogos')->get();
     $data=$this->funciones->paginarDatos($data,$currentPage,$limit);
     return response()->json(['respuesta' => $data], 200);
+    }
+
+    public function Update_Catalogo(Request $request)
+    {
+    $data=DB::connection('nextbookPRE')->table('inventario.catalogos')->where('id',$request->id)->update(['tipo_catalogo' => $request->tipo_catalogo , 'producto' => $request->producto]);
+    return response()->json(['respuesta' => true], 200);
+    }
+
+    public function Delete_Catalogo(Request $request)
+    {
+    $data=DB::connection('nextbookPRE')->table('inventario.catalogos')->where('id',$request->id)->update(['estado'=>'I']);
+    return response()->json(['respuesta' => true], 200);
     }
 }

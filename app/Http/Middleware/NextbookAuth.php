@@ -18,6 +18,10 @@ class NextbookAuth
      */
     public function handle($request, Closure $next)
     {
+        if ($request->token=='') {
+            return response(['error'=>'Sin-Token-de-Seguridad'], 401);
+        }
+
         $usuarios=new Usuarios();
         $datos=$usuarios->select('nick')->where('id',$request->nick)->get();
 
