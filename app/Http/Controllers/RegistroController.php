@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests;
 // Modelos
 use App\empresas;
+use App\Usuarios;
 // Funciones
 use App\libs\Funciones;
 // Extras
@@ -14,6 +15,8 @@ use Carbon\Carbon;
 use Mail;
 use GuzzleHttp\Client;
 use DB;
+use Config;
+use App\libs\xmlapi;
 //-------------------------  autenticacion -------
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
@@ -63,7 +66,7 @@ class RegistroController extends Controller
                                               // 'fecha_reinicio_actividades'=>$respuesta['datosEmpresa']['fecha_reinicio_actividades']
                                               // 'fecha_actualizacion'=>$respuesta['datosEmpresa']['fecha_actualizacion']
                                               ));
-      return response()->json(["respuesta" => $respuesta], 200);
+      return response()->json(["respuesta" => $respuesta['datosEmpresa']], 200);
       }else{
         return response()->json(["respuesta" => 'false-sri',"error"=>'no-registro-SRI'], 200);
       }
@@ -80,14 +83,16 @@ class RegistroController extends Controller
     }
 
     public function Save_Datos_Ruc(Request $request){
+
+      //return response()->json(['respuesta'=>$request->all()]);
       $ruc_ci=$request->input('ruc');
-      $nick=substr(str_replace(' ', '_', $request->input('razon_social')),0,24).'_'.$request->input('ruc');
-      // $nick=strlen($nick);
+      $nick=substr(str_replace(' ', '_', $request->input('razon_social')),0,11).'_'.$request->input('ruc');
+      //echo strlen($nick);
       $this->empresas->id=$this->funciones->generarID(); 
       $this->empresas->razon_social=$request->input('razon_social'); 
       $this->empresas->actividad_economica=$request->input('actividad_economica'); 
       $this->empresas->ruc_ci=$ruc_ci; 
-      $this->empresas->estdo_contribuyente=$request->input('estdo_contribuyente'); 
+      $this->empresas->estado_contribuyente=$request->input('estado_contribuyente'); 
       $this->empresas->fecha_inicio_actividades=$request->input('fecha_inicio_actividades'); 
       $this->empresas->nombre_comercial=$request->input('nombre_comercial'); 
       $this->empresas->obligado_lleva_contabilida=$request->input('obligado_lleva_contabilida'); 
@@ -135,26 +140,106 @@ class RegistroController extends Controller
     public function Activar_Cuenta(Request $request){
       $resultado=$this->empresas->select('razon_social')->where('id_estado','P')->where('ruc_ci',$request->input('ruc'))->get();
       if (count($resultado)!=0) {
-        $data['correo']=$request->input('correo');
+      $data['correo']=$request->input('correo');
       $data['razon_social']=$resultado[0]['razon_social'];
       $data['nombre_comercial']=$resultado[0]['razon_social'];
       $data['user_nextbook']=$request->input('ruc').'@facturanext.com';
-      $data['pass_nextbook']=$request->input('ruc');
       $resultado=$this->empresas->where('ruc_ci',$request->input('ruc'))->first();
-      $name=$resultado->nick;
+      $name=strtolower(substr(str_replace(' ', '_', $resultado['razon_social']),0,11).'_'.$request->input('ruc'));
+      //$pass_user=$data['pass_nextbook'];
+      DB::connection('nextbookconex')->statement("SELECT * from crea_usuario('".$name."','".$request->input('ruc')."') ");
       $create=DB::connection('infoconex')->statement("CREATE DATABASE $name OWNER $name ");
       if ($create) {
+        exec("PGPASSWORD=rootdow psql -U postgres -d ".$name." -p 5432 -h localhost < /var/www/html/appnext1.1/postgres/basico.sql", $cmdout, $cmdresult );
+        $pass_email=$this->funciones->generarPass();
+        $pass_next=$this->funciones->generarPass();
         $update=DB::connection('usuarioconex')->table('usuarios')
             ->where('id', $request->input('ruc'))
-                                  ->update(array('id_estado' => 'A','clave_clave'=>bcrypt($request->input('ruc'))));
+                                  ->update(array('id_estado' => 'A','clave_clave'=>bcrypt($request->input('ruc')),'mail'=>$request->input('ruc').'@oyefm.com','clave_mail'=>$pass_email));
         $update=$this->empresas->where('ruc_ci',$request->input('ruc'))->update(['id_estado' => 'A']);
-                                  if ($update) {
-                                    $this->enviar_correo_credenciales($data);
-                                    return response()->json(["respuesta"=>true]);
-                                  }
+        if ($update) {
+          $this->crear_email($request->input('ruc'),$pass_email);
+          Config::set('database.connections.'.$name, array(
+                'driver' => 'pgsql',
+                'host' => 'localhost',
+                'port' =>  '5432',
+                'database' =>  $name,
+                'username' =>  $name,
+                'password' =>  $request->input('ruc'),
+                'charset' => 'utf8',
+                'prefix' => '',
+                'schema' => 'usuarios',
+                'sslmode' => 'prefer',
+        ));
+        $id=$this->funciones->generarID();
+        $data['pass_nextbook']=$pass_next;
+        $usuarios=new Usuarios(); 
+        $usuarios->changeConnection($name);
+        $usuarios->id=$id;
+        $usuarios->nick=$request->input('ruc').'@facturanext.com';
+        $usuarios->clave_clave=bcrypt($pass_next);
+        $usuarios->id_estado='A';
+        $usuarios->estado_clave=FALSE;
+        $usuarios->fecha_creacion=Carbon::now()->toDateString();
+        $usuarios->save();
+
+          $this->enviar_correo_credenciales($data);
+          return response()->json(["respuesta"=>true]);
+        }
       }
     }else return response()->json(["respuesta"=>false]);
       
+    }
+
+    private function crear_email($user,$email_pass)
+    {
+        $ip           = "oyefm.com"; 
+        $account      = "oyefm"; 
+        $passwd       = "FRf74G7oW,$0yTQ"; 
+        $port         = 2083; 
+        $email_domain = 'oyefm.com'; 
+        $email_quota  = 50; 
+        $xmlapi       = new xmlapi($ip);
+        $xmlapi->set_port($port); 
+        $xmlapi->password_auth($account, $passwd); 
+        // $email_pass = "356497";
+        $result        = "";
+        if (!empty($user)){
+            while (true) {
+
+                $call   = array(
+                    'domain' => $email_domain,
+                    'email' => $user,
+                    'password' => $email_pass,
+                    'quota' => $email_quota
+                );
+
+                $call_f = array(
+                    'domain' => $email_domain,
+                    'email' => $user,
+                    'fwdopt' => "fwd",
+                    'fwdemail' => ""
+                );
+                $xmlapi->set_debug(0); 
+                
+                $result         = $xmlapi->api2_query($account, "Email", "addpop", $call);
+                $result_forward = $xmlapi->api2_query($account, "Email", "addforward", $call_f); 
+
+                
+                if ($result->data->result == 1) {
+                    $result = $user.'@'.$email_domain;
+                    if ($result_forward->data->result == 1) {
+                        $result = $user . '@' . $email_domain . ' forward to ' . $dest_email;
+                    }
+                } else {
+                    $result = $result->data->reason;
+                    break;
+                }
+                break;
+            }
+            }
+        return $result;
+        
     }
 
     public function Get_Provincias(Request $request){

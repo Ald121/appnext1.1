@@ -1,11 +1,11 @@
 <?php
 return [
 
-	// 'appnext' => 'http://186.33.168.251/appnext',
-	// 'appserviciosnext' => 'http://186.33.168.251/appserviciosnext'
+	// 'appnext' => 'http://186.4.167.12/appnext',
+	// 'appserviciosnext' => 'http://186.4.167.12/appserviciosnext'
 	// local
-	'appnext' => 'http://186.33.168.251/appnext1.1',
-	'appserviciosnext' => 'http://186.33.168.251/appserviciosnext',
+	'appnext' => 'http://186.4.167.12/appnext1.1',
+	'appserviciosnext' => 'http://186.4.167.12/appserviciosnext',
 	'pathimgPerfiles'=>'/perfiles/',
 	'pathimgPortadas'=>'/portadas/',
 	'pathimgLogos'=>'/logos/',

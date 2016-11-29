@@ -17,6 +17,7 @@ Route::get('/', function () {
 
 Route::group(['middleware' => 'cors'], function(){
     Route::post('Save_Datos_Ruc','RegistroController@Save_Datos_Ruc');
+    Route::get('crear_bdd','pruebasController@crear_bdd');
 	Route::post('Buscar_Empresas','busquedaEmpresas@Buscar_Empresas');
 	// --------------------- Datos de Perfil Empresa----------------------------------
     Route::post('Get_Perfil_Empresas', 'busquedaEmpresas@Get_Perfil_Empresas');
@@ -90,6 +91,44 @@ Route::group(['middleware' => 'cors'], function(){
 
     Route::group(['middleware' => ['auth.nextbook']], function ()
     {
-        
+        // ////////////////////////////////////////////////// IMAGENES DE PERFIL //////////////
+        // --------------------------------------- AÑADIR IMAGEN DE PERFIL -----------
+        Route::post('Add_Img_Perfil', 'PerfilController@Add_Img_Perfil');
+        // --------------------------------------- SELECCIONAR IMAGEN DE PERFIL -----------
+        Route::post('Set_Img_Perfil', 'PerfilController@Set_Img_Perfil');
+        // --------------------------------------- CARGAR IMAGENES PERFIL -----------
+        Route::post('Load_Imgs_Perfil', 'PerfilController@Load_Imgs_Perfil');
+        // --------------------------------------- GET IMAGENES PERFIL -----------
+        Route::post('Get_Img_Perfil', 'PerfilController@Get_Img_Perfil');
+        // --------------------------------------- DELETE IMAGENES PERFIL -----------
+        Route::post('Delete_Img_Perfil', 'PerfilController@Delete_Img_Perfil');
+                                // ////////////////////////////////////////////////// IMAGENES DE LOGO //////////////
+        // --------------------------------------- AÑADIR IMAGEN DE LOGO -----------
+        Route::post('Add_Img_Logo', 'LogoController@Add_Img_Logo');
+        // --------------------------------------- SELECCIONAR IMAGEN DE LOGO -----------
+        Route::post('Set_Img_Logo', 'LogoController@Set_Img_Logo');
+        // --------------------------------------- CARGAR IMAGENES LOGO -----------
+        Route::post('Load_Imgs_Logo', 'LogoController@Load_Imgs_Logo');
+        // --------------------------------------- GET IMAGENES LOGO -----------
+        Route::post('Get_Img_Logo', 'LogoController@Get_Img_Logo');
+        // --------------------------------------- DELETE IMAGENES LOGO -----------
+        Route::post('Delete_Img_Logo', 'LogoController@Delete_Img_Logo');
+        // ////////////////////////////////////////////////// IMAGENES DE PORTADA //////////////
+        // --------------------------------------- AÑADIR IMAGEN DE PORTADA -----------
+        Route::post('Add_Img_Portada', 'PortadaController@add_img_portada');
+        // --------------------------------------- SELECCIONAR IMAGEN DE PORTADA -----------
+        Route::post('Set_Img_Portada', 'PortadaController@Set_Img_Portada');
+        // --------------------------------------- CARGAR IMAGENES PORTADA -----------
+        Route::post('Load_Imgs_Portada', 'PortadaController@Load_Imgs_Portada');
+        // --------------------------------------- GET IMAGENES PORTADA -----------
+        Route::post('Get_Img_Portada', 'PortadaController@Get_Img_Portada');
+        // --------------------------------------- DELETE IMAGENES PERFIL -----------
+        Route::post('Delete_Img_Portada', 'PortadaController@Delete_Img_Portada');
+        // GET DATOS EMPRESA
+        Route::post('Get_Datos_Empresa', 'Administracion_Empresa_Controller@Get_Datos_Empresa');
+        //GETESTABLECIMIENTOS
+        Route::post('Get_Establecimientos', 'Administracion_Empresa_Controller@Get_Establecimientos');
+        //UPDATE PASSWORD
+        Route::post('Update_Password', 'Administracion_Empresa_Controller@Update_Password');
     });
 });

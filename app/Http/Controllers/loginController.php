@@ -29,16 +29,22 @@ class loginController extends Controller
     	// Modelos
     	$this->usuarios=new Usuarios();
         $this->ingresos_usuarios=new ingresos_usuarios();
+        $this->empresas=new empresas();
     }
 
     public function Acceso(Request $request){
+        $acceso=json_decode($request->acceso);
         // $credentials = ['nick' => $request->nick, 'password' => $request->clave_clave];
 
-        $datos=$this->usuarios->select('nick')->where('id',$request->nick)->get();
+        $datos=$this->usuarios->select('nick','id')->where('id',$acceso->nick.'001')->get();
+        if (count($datos)==0) {
+            return response()->json(["respuesta"=>false]);
+        }
 
         $name_bdd = $datos[0]['nick'];
 
         $name_bdd=strtolower($datos[0]['nick']);
+        $pass_bdd=$datos[0]['id'];
 
         Config::set('database.connections.'.$name_bdd, array(
                 'driver' => 'pgsql',
@@ -46,15 +52,15 @@ class loginController extends Controller
                 'port' =>  '5432',
                 'database' =>  $name_bdd,
                 'username' =>  $name_bdd,
-                'password' =>  $request->nick,
+                'password' =>  $pass_bdd,
                 'charset' => 'utf8',
                 'prefix' => '',
-                'schema' => 'public',
+                'schema' => 'usuarios',
                 'sslmode' => 'prefer',
         ));
         $usuarios=new Usuarios(); 
         $usuarios->changeConnection($name_bdd);
-        $user=$request->nick.'@facturanext.com';
+        $user=$acceso->nick.'001@facturanext.com';
 
         $json['ip_cliente']=$request->input('ip_cliente');
         $json['macadress']=$request->input('macadress');
@@ -65,16 +71,28 @@ class loginController extends Controller
         $this->ingresos_usuarios->save();
 
         $datos=$usuarios->select('clave_clave')->where('nick',$user)->first();
-        $checkpass=Hash::check($request->clave_clave, $datos['clave_clave']);
+        $checkpass=Hash::check($acceso->clave, $datos['clave_clave']);
 
         if ($checkpass) {
          $datos = $usuarios->select('id','nick')->where('nick',$user)->first();
-         $token = JWTAuth::fromUser($datos);
+         $extra=['nbdb'=>$name_bdd,'pnb'=>$pass_bdd,'ruc'=>$acceso->nick];
+         $token = JWTAuth::fromUser($datos,$extra);
+         $datosE=DB::connection('nextbookconex')->table('empresas')->select('id',
+            'razon_social',
+            'actividad_economica',
+            'ruc_ci',
+            'estado_contribuyente',
+            'fecha_inicio_actividades',
+            'nombre_comercial',
+            'obligado_lleva_contabilida',
+            'tipo_contribuyente',
+            'fecha_creacion')->where('id_estado','A')->where('ruc_ci',$acceso->nick.'001')->first();
 
-         $usuarios->where('nick',$user)->update(["token"=>$token]);
-         return response()->json(compact('token'));
+         //$usuarios->where('nick',$user)->update(["token"=>$token]);
+         return response()->json(['respuesta'=>true,'token'=>$token,'datosE'=>$datosE]);
         }
         return response()->json(["respuesta"=>$checkpass]);
+        //return response()->json(["respuesta"=>$name_bdd]);
            
     }
 }

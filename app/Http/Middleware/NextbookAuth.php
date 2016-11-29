@@ -7,6 +7,8 @@ use Closure;
 use App\Usuarios;
 use Config;
 
+use \Firebase\JWT\JWT;
+
 class NextbookAuth
 {
     /**
@@ -22,12 +24,10 @@ class NextbookAuth
             return response(['error'=>'Sin-Token-de-Seguridad'], 401);
         }
 
-        $usuarios=new Usuarios();
-        $datos=$usuarios->select('nick')->where('id',$request->nick)->get();
-
-        $name_bdd = $datos[0]['nick'];
-
-        $name_bdd=strtolower($datos[0]['nick']);
+        $key=config('jwt.secret');
+        $decoded = JWT::decode($request->token, $key, array('HS256'));
+        $name_bdd=$decoded->nbdb;
+        $pass_bdd=$decoded->pnb;
 
         Config::set('database.connections.'.$name_bdd, array(
                 'driver' => 'pgsql',
@@ -35,17 +35,18 @@ class NextbookAuth
                 'port' =>  '5432',
                 'database' =>  $name_bdd,
                 'username' =>  $name_bdd,
-                'password' =>  $request->nick,
+                'password' =>  $pass_bdd,
                 'charset' => 'utf8',
                 'prefix' => '',
-                'schema' => 'public',
+                'schema' => 'usuarios',
                 'sslmode' => 'prefer',
         ));
         $usuarios=new Usuarios(); 
         $usuarios->changeConnection($name_bdd);
-        // $user=$request->nick.'@facturanext.com';
+        
+        //return response(['datos'=>$decoded]);
 
-        $datos=$usuarios->where('token',$request->input('token'))->get();
+        $datos=$usuarios->where('id',$decoded->sub)->get();
         if (count($datos)>0) {
             return $next($request);
         }else{
