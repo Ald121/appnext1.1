@@ -16,6 +16,9 @@ class Administracion_Empresa_Controller extends Controller
     public function __construct(Request $request)
 
         {
+          // Funciones
+        $this->funciones=new Funciones();
+        
         $key=config('jwt.secret');
         $decoded = JWT::decode($request->token, $key, array('HS256'));
         $this->user=$decoded;
@@ -34,8 +37,16 @@ class Administracion_Empresa_Controller extends Controller
         public function Get_Establecimientos(Request $request)
 
         {
-            $ruc=$this->user->ruc.'001';
-       $resultado=DB::connection('nextbookconex')->select("SELECT administracion.empresa_ruc('".$ruc."')");
+       /* $ruc=$this->user->ruc.'001';
+        $resultado=DB::connection('nextbookconex')->select("SELECT * FROM informacion.empresas WHERE ruc='".$ruc."'");
+        foreach ($resultado as $key => $value) {
+        $id=$value->descripcion_parroquia;
+        $provincia=DB::connection('nextbookconex')->select("SELECT nombre, path, parent FROM public.view_localidades WHERE id='".$id."'");
+        $localizacion=explode('/', $provincia[0]->path);
+        $resultado[$key]->descripcion_provincia=$localizacion[1];
+        $resultado[$key]->descripcion_canton=$localizacion[2];
+        $resultado[$key]->descripcion_parroquia=$localizacion[3];
+       }
        return response()->json(["respuesta" =>$resultado], 200);
       // $resultado = $this->tableEmpresas->select('ruc')->where('ruc', '=', $request->input('ruc'))->get();
     if (count($resultado)==0)
@@ -75,8 +86,17 @@ class Administracion_Empresa_Controller extends Controller
       else
       {
           return response()->json(["respuesta" =>$resultado], 200);
+      }*/
+
+      $currentPage = $request->pagina_actual;
+      $limit = $request->limit;
+      $data=DB::connection($this->name_bdd)->table('administracion.sucursales')->select('id','nombre','localizacion_sucursal','codigo_sri')->get();
+      foreach ($data as $key => $value) {
+      //$lugar=DB::connection('localidadesconex')->table('view_localidades')->select('nombre')->where('id',$value->lugar)->first();
+        $value->localizacion_sucursal=json_decode($value->localizacion_sucursal);
       }
-      
+      $data=$this->funciones->paginarDatos($data,$currentPage,$limit);
+      return response()->json(['respuesta' => $data], 200);
         }
 
         public function Update_Password(Request $request)

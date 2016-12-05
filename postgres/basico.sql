@@ -5,7 +5,7 @@
 -- Dumped from database version 9.5.5
 -- Dumped by pg_dump version 9.5.5
 
--- Started on 2016-11-24 15:58:29 ECT
+-- Started on 2016-12-05 10:27:09 ECT
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -14,6 +14,16 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET row_security = off;
+
+--
+-- TOC entry 14 (class 2615 OID 36485)
+-- Name: administracion; Type: SCHEMA; Schema: -; Owner: postgres
+--
+
+CREATE SCHEMA administracion;
+
+
+ALTER SCHEMA administracion OWNER TO postgres;
 
 --
 -- TOC entry 7 (class 2615 OID 16396)
@@ -26,7 +36,7 @@ CREATE SCHEMA auditoria;
 ALTER SCHEMA auditoria OWNER TO postgres;
 
 --
--- TOC entry 3476 (class 0 OID 0)
+-- TOC entry 3551 (class 0 OID 0)
 -- Dependencies: 7
 -- Name: SCHEMA auditoria; Type: COMMENT; Schema: -; Owner: postgres
 --
@@ -93,7 +103,7 @@ CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 
 
 --
--- TOC entry 3479 (class 0 OID 0)
+-- TOC entry 3554 (class 0 OID 0)
 -- Dependencies: 1
 -- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
 --
@@ -104,7 +114,7 @@ COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
 SET search_path = public, pg_catalog;
 
 --
--- TOC entry 264 (class 1255 OID 16408)
+-- TOC entry 275 (class 1255 OID 16408)
 -- Name: f_convnl(numeric); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -230,7 +240,7 @@ $$;
 ALTER FUNCTION public.f_convnl(num numeric) OWNER TO postgres;
 
 --
--- TOC entry 265 (class 1255 OID 16409)
+-- TOC entry 276 (class 1255 OID 16409)
 -- Name: fun_auditoria(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -258,14 +268,253 @@ $$;
 
 ALTER FUNCTION public.fun_auditoria() OWNER TO postgres;
 
-SET search_path = auditoria, pg_catalog;
+SET search_path = usuarios, pg_catalog;
+
+--
+-- TOC entry 277 (class 1255 OID 47277)
+-- Name: actualiza_clave(character varying, character varying); Type: FUNCTION; Schema: usuarios; Owner: postgres
+--
+
+CREATE FUNCTION actualiza_clave(iden character varying, contra character varying) RETURNS boolean
+    LANGUAGE plpgsql
+    AS $$
+declare
+
+BEGIN
+		
+		
+		
+		
+		if exists (select usuarios from usuarios.usuarios where id = iden and id_estado = 'A') then
+			UPDATE usuarios.usuarios
+			SET  clave_clave = contra, estado_clave= true
+		WHERE id = iden;
+			return true;
+		else 
+			return raise  'El usuario no exixte o esta inactivo';
+		end if;
+			
+END;
+$$;
+
+
+ALTER FUNCTION usuarios.actualiza_clave(iden character varying, contra character varying) OWNER TO postgres;
+
+SET search_path = administracion, pg_catalog;
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- TOC entry 187 (class 1259 OID 16422)
+-- TOC entry 250 (class 1259 OID 45870)
+-- Name: empresas; Type: TABLE; Schema: administracion; Owner: postgres
+--
+
+CREATE TABLE empresas (
+    id integer NOT NULL,
+    razon_social character varying(250) NOT NULL,
+    actividad_economica character varying(750),
+    ruc_ci character varying(25) NOT NULL,
+    nombre_comercial character varying(250),
+    id_estado character varying(5) NOT NULL,
+    fecha_creacion timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE empresas OWNER TO postgres;
+
+--
+-- TOC entry 3555 (class 0 OID 0)
+-- Dependencies: 250
+-- Name: COLUMN empresas.id; Type: COMMENT; Schema: administracion; Owner: postgres
+--
+
+COMMENT ON COLUMN empresas.id IS 'define el identificador de la empresa';
+
+
+--
+-- TOC entry 3556 (class 0 OID 0)
+-- Dependencies: 250
+-- Name: COLUMN empresas.razon_social; Type: COMMENT; Schema: administracion; Owner: postgres
+--
+
+COMMENT ON COLUMN empresas.razon_social IS 'define la razon social de la empresa';
+
+
+--
+-- TOC entry 3557 (class 0 OID 0)
+-- Dependencies: 250
+-- Name: COLUMN empresas.actividad_economica; Type: COMMENT; Schema: administracion; Owner: postgres
+--
+
+COMMENT ON COLUMN empresas.actividad_economica IS 'actividad economica que realiza la empresa';
+
+
+--
+-- TOC entry 3558 (class 0 OID 0)
+-- Dependencies: 250
+-- Name: COLUMN empresas.ruc_ci; Type: COMMENT; Schema: administracion; Owner: postgres
+--
+
+COMMENT ON COLUMN empresas.ruc_ci IS 'ruc o cedula dependiendo el tipo de usuario';
+
+
+--
+-- TOC entry 3559 (class 0 OID 0)
+-- Dependencies: 250
+-- Name: COLUMN empresas.nombre_comercial; Type: COMMENT; Schema: administracion; Owner: postgres
+--
+
+COMMENT ON COLUMN empresas.nombre_comercial IS 'nombre con el que se le conoce a la empresa';
+
+
+--
+-- TOC entry 3560 (class 0 OID 0)
+-- Dependencies: 250
+-- Name: COLUMN empresas.id_estado; Type: COMMENT; Schema: administracion; Owner: postgres
+--
+
+COMMENT ON COLUMN empresas.id_estado IS 'define el estado de la empresa para el sistema Nexbook';
+
+
+--
+-- TOC entry 249 (class 1259 OID 45868)
+-- Name: empresas_id_seq; Type: SEQUENCE; Schema: administracion; Owner: postgres
+--
+
+CREATE SEQUENCE empresas_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE empresas_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3561 (class 0 OID 0)
+-- Dependencies: 249
+-- Name: empresas_id_seq; Type: SEQUENCE OWNED BY; Schema: administracion; Owner: postgres
+--
+
+ALTER SEQUENCE empresas_id_seq OWNED BY empresas.id;
+
+
+--
+-- TOC entry 256 (class 1259 OID 47146)
+-- Name: imagen_empresa; Type: TABLE; Schema: administracion; Owner: postgres
+--
+
+CREATE TABLE imagen_empresa (
+    id integer NOT NULL,
+    empresa integer NOT NULL,
+    direccion_imagen_empresa character varying(500) NOT NULL,
+    estado character varying(5) NOT NULL,
+    fecha time with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE imagen_empresa OWNER TO postgres;
+
+--
+-- TOC entry 255 (class 1259 OID 47144)
+-- Name: imagen_empresa_id_seq; Type: SEQUENCE; Schema: administracion; Owner: postgres
+--
+
+CREATE SEQUENCE imagen_empresa_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE imagen_empresa_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3562 (class 0 OID 0)
+-- Dependencies: 255
+-- Name: imagen_empresa_id_seq; Type: SEQUENCE OWNED BY; Schema: administracion; Owner: postgres
+--
+
+ALTER SEQUENCE imagen_empresa_id_seq OWNED BY imagen_empresa.id;
+
+
+--
+-- TOC entry 252 (class 1259 OID 47076)
+-- Name: sucursales; Type: TABLE; Schema: administracion; Owner: postgres
+--
+
+CREATE TABLE sucursales (
+    id integer NOT NULL,
+    nombre character varying(250) NOT NULL,
+    responsable integer NOT NULL,
+    datos_empresariales jsonb NOT NULL,
+    localizacion_sucursal jsonb NOT NULL,
+    datos_adiconales jsonb,
+    codigo_sri character varying(3) NOT NULL
+);
+
+
+ALTER TABLE sucursales OWNER TO postgres;
+
+--
+-- TOC entry 3563 (class 0 OID 0)
+-- Dependencies: 252
+-- Name: COLUMN sucursales.datos_empresariales; Type: COMMENT; Schema: administracion; Owner: postgres
+--
+
+COMMENT ON COLUMN sucursales.datos_empresariales IS 'define los datos aministrativos de la empresa como mision vision y valores empresariales';
+
+
+--
+-- TOC entry 3564 (class 0 OID 0)
+-- Dependencies: 252
+-- Name: COLUMN sucursales.localizacion_sucursal; Type: COMMENT; Schema: administracion; Owner: postgres
+--
+
+COMMENT ON COLUMN sucursales.localizacion_sucursal IS 'Define los datos de localización de la empresa tanto físicos como electrónicos ejemplos dirección, teléfonos, correo electrónico y redes sociales';
+
+
+--
+-- TOC entry 3565 (class 0 OID 0)
+-- Dependencies: 252
+-- Name: COLUMN sucursales.datos_adiconales; Type: COMMENT; Schema: administracion; Owner: postgres
+--
+
+COMMENT ON COLUMN sucursales.datos_adiconales IS 'Otras redes sociales y demas que no son tomadas en cuenta en localizacion empresa';
+
+
+--
+-- TOC entry 251 (class 1259 OID 47074)
+-- Name: sucursales_id_seq; Type: SEQUENCE; Schema: administracion; Owner: postgres
+--
+
+CREATE SEQUENCE sucursales_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE sucursales_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3566 (class 0 OID 0)
+-- Dependencies: 251
+-- Name: sucursales_id_seq; Type: SEQUENCE OWNED BY; Schema: administracion; Owner: postgres
+--
+
+ALTER SEQUENCE sucursales_id_seq OWNED BY sucursales.id;
+
+
+SET search_path = auditoria, pg_catalog;
+
+--
+-- TOC entry 188 (class 1259 OID 16422)
 -- Name: auditoria; Type: TABLE; Schema: auditoria; Owner: postgres
 --
 
@@ -283,8 +532,8 @@ CREATE TABLE auditoria (
 ALTER TABLE auditoria OWNER TO postgres;
 
 --
--- TOC entry 3480 (class 0 OID 0)
--- Dependencies: 187
+-- TOC entry 3567 (class 0 OID 0)
+-- Dependencies: 188
 -- Name: COLUMN auditoria.id; Type: COMMENT; Schema: auditoria; Owner: postgres
 --
 
@@ -292,8 +541,8 @@ COMMENT ON COLUMN auditoria.id IS 'define el identificador de la tabla auditoria
 
 
 --
--- TOC entry 3481 (class 0 OID 0)
--- Dependencies: 187
+-- TOC entry 3568 (class 0 OID 0)
+-- Dependencies: 188
 -- Name: COLUMN auditoria.tabla_afectada; Type: COMMENT; Schema: auditoria; Owner: postgres
 --
 
@@ -301,8 +550,8 @@ COMMENT ON COLUMN auditoria.tabla_afectada IS 'almacena el nombre de la tabla qu
 
 
 --
--- TOC entry 3482 (class 0 OID 0)
--- Dependencies: 187
+-- TOC entry 3569 (class 0 OID 0)
+-- Dependencies: 188
 -- Name: COLUMN auditoria.operacion; Type: COMMENT; Schema: auditoria; Owner: postgres
 --
 
@@ -310,8 +559,8 @@ COMMENT ON COLUMN auditoria.operacion IS 'guarda la operacion realizada, I inser
 
 
 --
--- TOC entry 3483 (class 0 OID 0)
--- Dependencies: 187
+-- TOC entry 3570 (class 0 OID 0)
+-- Dependencies: 188
 -- Name: COLUMN auditoria.variable_anterior; Type: COMMENT; Schema: auditoria; Owner: postgres
 --
 
@@ -319,8 +568,8 @@ COMMENT ON COLUMN auditoria.variable_anterior IS 'almacena los valores viejos';
 
 
 --
--- TOC entry 3484 (class 0 OID 0)
--- Dependencies: 187
+-- TOC entry 3571 (class 0 OID 0)
+-- Dependencies: 188
 -- Name: COLUMN auditoria.variable_nueva; Type: COMMENT; Schema: auditoria; Owner: postgres
 --
 
@@ -328,8 +577,8 @@ COMMENT ON COLUMN auditoria.variable_nueva IS 'almacena los valores nuevos';
 
 
 --
--- TOC entry 3485 (class 0 OID 0)
--- Dependencies: 187
+-- TOC entry 3572 (class 0 OID 0)
+-- Dependencies: 188
 -- Name: COLUMN auditoria.fecha; Type: COMMENT; Schema: auditoria; Owner: postgres
 --
 
@@ -337,8 +586,8 @@ COMMENT ON COLUMN auditoria.fecha IS 'almacena la fecha de modificacion de los d
 
 
 --
--- TOC entry 3486 (class 0 OID 0)
--- Dependencies: 187
+-- TOC entry 3573 (class 0 OID 0)
+-- Dependencies: 188
 -- Name: COLUMN auditoria.usuario; Type: COMMENT; Schema: auditoria; Owner: postgres
 --
 
@@ -346,7 +595,7 @@ COMMENT ON COLUMN auditoria.usuario IS 'almacena el usuario de la BDD';
 
 
 --
--- TOC entry 188 (class 1259 OID 16428)
+-- TOC entry 189 (class 1259 OID 16428)
 -- Name: auditoria_id_seq; Type: SEQUENCE; Schema: auditoria; Owner: postgres
 --
 
@@ -361,8 +610,8 @@ CREATE SEQUENCE auditoria_id_seq
 ALTER TABLE auditoria_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3487 (class 0 OID 0)
--- Dependencies: 188
+-- TOC entry 3574 (class 0 OID 0)
+-- Dependencies: 189
 -- Name: auditoria_id_seq; Type: SEQUENCE OWNED BY; Schema: auditoria; Owner: postgres
 --
 
@@ -370,7 +619,7 @@ ALTER SEQUENCE auditoria_id_seq OWNED BY auditoria.id;
 
 
 --
--- TOC entry 189 (class 1259 OID 16430)
+-- TOC entry 190 (class 1259 OID 16430)
 -- Name: ingresos_usuarios; Type: TABLE; Schema: auditoria; Owner: postgres
 --
 
@@ -386,7 +635,7 @@ CREATE TABLE ingresos_usuarios (
 ALTER TABLE ingresos_usuarios OWNER TO postgres;
 
 --
--- TOC entry 190 (class 1259 OID 16436)
+-- TOC entry 191 (class 1259 OID 16436)
 -- Name: ingresos_usuarios_id_seq; Type: SEQUENCE; Schema: auditoria; Owner: postgres
 --
 
@@ -401,8 +650,8 @@ CREATE SEQUENCE ingresos_usuarios_id_seq
 ALTER TABLE ingresos_usuarios_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3488 (class 0 OID 0)
--- Dependencies: 190
+-- TOC entry 3575 (class 0 OID 0)
+-- Dependencies: 191
 -- Name: ingresos_usuarios_id_seq; Type: SEQUENCE OWNED BY; Schema: auditoria; Owner: postgres
 --
 
@@ -412,7 +661,7 @@ ALTER SEQUENCE ingresos_usuarios_id_seq OWNED BY ingresos_usuarios.id;
 SET search_path = contabilidad, pg_catalog;
 
 --
--- TOC entry 191 (class 1259 OID 16438)
+-- TOC entry 192 (class 1259 OID 16438)
 -- Name: ambitos_impuestos; Type: TABLE; Schema: contabilidad; Owner: postgres
 --
 
@@ -427,7 +676,7 @@ CREATE TABLE ambitos_impuestos (
 ALTER TABLE ambitos_impuestos OWNER TO postgres;
 
 --
--- TOC entry 192 (class 1259 OID 16441)
+-- TOC entry 193 (class 1259 OID 16441)
 -- Name: ambitos_impuestos_id_seq; Type: SEQUENCE; Schema: contabilidad; Owner: postgres
 --
 
@@ -442,8 +691,8 @@ CREATE SEQUENCE ambitos_impuestos_id_seq
 ALTER TABLE ambitos_impuestos_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3489 (class 0 OID 0)
--- Dependencies: 192
+-- TOC entry 3576 (class 0 OID 0)
+-- Dependencies: 193
 -- Name: ambitos_impuestos_id_seq; Type: SEQUENCE OWNED BY; Schema: contabilidad; Owner: postgres
 --
 
@@ -451,7 +700,88 @@ ALTER SEQUENCE ambitos_impuestos_id_seq OWNED BY ambitos_impuestos.id;
 
 
 --
--- TOC entry 193 (class 1259 OID 16443)
+-- TOC entry 262 (class 1259 OID 47985)
+-- Name: bancos; Type: TABLE; Schema: contabilidad; Owner: postgres
+--
+
+CREATE TABLE bancos (
+    id integer NOT NULL,
+    nombre character varying(250) NOT NULL,
+    numero_cuanta character varying(25) NOT NULL
+);
+
+
+ALTER TABLE bancos OWNER TO postgres;
+
+--
+-- TOC entry 261 (class 1259 OID 47983)
+-- Name: bancos_id_seq; Type: SEQUENCE; Schema: contabilidad; Owner: postgres
+--
+
+CREATE SEQUENCE bancos_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE bancos_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3577 (class 0 OID 0)
+-- Dependencies: 261
+-- Name: bancos_id_seq; Type: SEQUENCE OWNED BY; Schema: contabilidad; Owner: postgres
+--
+
+ALTER SEQUENCE bancos_id_seq OWNED BY bancos.id;
+
+
+--
+-- TOC entry 259 (class 1259 OID 47183)
+-- Name: cuentas_contables; Type: TABLE; Schema: contabilidad; Owner: postgres
+--
+
+CREATE TABLE cuentas_contables (
+    id integer NOT NULL,
+    codigo integer NOT NULL,
+    nombre_corto character varying(50) NOT NULL,
+    descripcion character varying(500) NOT NULL,
+    signo_cuenta boolean DEFAULT true NOT NULL,
+    tipo_cuenta integer NOT NULL,
+    debe money DEFAULT 0.00 NOT NULL,
+    haber money DEFAULT 0.00 NOT NULL
+);
+
+
+ALTER TABLE cuentas_contables OWNER TO postgres;
+
+--
+-- TOC entry 260 (class 1259 OID 47239)
+-- Name: cuentas_contables_id_seq; Type: SEQUENCE; Schema: contabilidad; Owner: postgres
+--
+
+CREATE SEQUENCE cuentas_contables_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE cuentas_contables_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3578 (class 0 OID 0)
+-- Dependencies: 260
+-- Name: cuentas_contables_id_seq; Type: SEQUENCE OWNED BY; Schema: contabilidad; Owner: postgres
+--
+
+ALTER SEQUENCE cuentas_contables_id_seq OWNED BY cuentas_contables.id;
+
+
+--
+-- TOC entry 194 (class 1259 OID 16443)
 -- Name: genealogia_impuestos; Type: TABLE; Schema: contabilidad; Owner: postgres
 --
 
@@ -464,8 +794,8 @@ CREATE TABLE genealogia_impuestos (
 ALTER TABLE genealogia_impuestos OWNER TO postgres;
 
 --
--- TOC entry 3490 (class 0 OID 0)
--- Dependencies: 193
+-- TOC entry 3579 (class 0 OID 0)
+-- Dependencies: 194
 -- Name: TABLE genealogia_impuestos; Type: COMMENT; Schema: contabilidad; Owner: postgres
 --
 
@@ -473,7 +803,7 @@ COMMENT ON TABLE genealogia_impuestos IS 'define el arbol de los impuestos para 
 
 
 --
--- TOC entry 194 (class 1259 OID 16446)
+-- TOC entry 195 (class 1259 OID 16446)
 -- Name: grupo_impuestos; Type: TABLE; Schema: contabilidad; Owner: postgres
 --
 
@@ -488,7 +818,7 @@ CREATE TABLE grupo_impuestos (
 ALTER TABLE grupo_impuestos OWNER TO postgres;
 
 --
--- TOC entry 195 (class 1259 OID 16449)
+-- TOC entry 196 (class 1259 OID 16449)
 -- Name: grupo_impuestos_id_seq; Type: SEQUENCE; Schema: contabilidad; Owner: postgres
 --
 
@@ -503,8 +833,8 @@ CREATE SEQUENCE grupo_impuestos_id_seq
 ALTER TABLE grupo_impuestos_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3491 (class 0 OID 0)
--- Dependencies: 195
+-- TOC entry 3580 (class 0 OID 0)
+-- Dependencies: 196
 -- Name: grupo_impuestos_id_seq; Type: SEQUENCE OWNED BY; Schema: contabilidad; Owner: postgres
 --
 
@@ -512,7 +842,7 @@ ALTER SEQUENCE grupo_impuestos_id_seq OWNED BY grupo_impuestos.id;
 
 
 --
--- TOC entry 196 (class 1259 OID 16451)
+-- TOC entry 197 (class 1259 OID 16451)
 -- Name: impuestos; Type: TABLE; Schema: contabilidad; Owner: postgres
 --
 
@@ -530,7 +860,7 @@ CREATE TABLE impuestos (
 ALTER TABLE impuestos OWNER TO postgres;
 
 --
--- TOC entry 197 (class 1259 OID 16457)
+-- TOC entry 198 (class 1259 OID 16457)
 -- Name: impuestos_id_seq; Type: SEQUENCE; Schema: contabilidad; Owner: postgres
 --
 
@@ -545,18 +875,101 @@ CREATE SEQUENCE impuestos_id_seq
 ALTER TABLE impuestos_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3492 (class 0 OID 0)
--- Dependencies: 197
+-- TOC entry 3581 (class 0 OID 0)
+-- Dependencies: 198
 -- Name: impuestos_id_seq; Type: SEQUENCE OWNED BY; Schema: contabilidad; Owner: postgres
 --
 
 ALTER SEQUENCE impuestos_id_seq OWNED BY impuestos.id;
 
 
+--
+-- TOC entry 258 (class 1259 OID 47168)
+-- Name: tipos_cuentas_contables; Type: TABLE; Schema: contabilidad; Owner: postgres
+--
+
+CREATE TABLE tipos_cuentas_contables (
+    id integer NOT NULL,
+    nombre character varying(250) NOT NULL,
+    descripcion character varying(500) NOT NULL,
+    estado character varying(5) NOT NULL,
+    fecha timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE tipos_cuentas_contables OWNER TO postgres;
+
+--
+-- TOC entry 257 (class 1259 OID 47166)
+-- Name: tipo_cuenta_contable_id_seq; Type: SEQUENCE; Schema: contabilidad; Owner: postgres
+--
+
+CREATE SEQUENCE tipo_cuenta_contable_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE tipo_cuenta_contable_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3582 (class 0 OID 0)
+-- Dependencies: 257
+-- Name: tipo_cuenta_contable_id_seq; Type: SEQUENCE OWNED BY; Schema: contabilidad; Owner: postgres
+--
+
+ALTER SEQUENCE tipo_cuenta_contable_id_seq OWNED BY tipos_cuentas_contables.id;
+
+
 SET search_path = inventario, pg_catalog;
 
 --
--- TOC entry 198 (class 1259 OID 16468)
+-- TOC entry 254 (class 1259 OID 47087)
+-- Name: bodegas; Type: TABLE; Schema: inventario; Owner: postgres
+--
+
+CREATE TABLE bodegas (
+    id integer NOT NULL,
+    dependencia integer NOT NULL,
+    nombre character varying(75) NOT NULL,
+    calle character varying(70) NOT NULL,
+    numero character varying(10) NOT NULL,
+    espesificaciones character varying(500),
+    fecha timestamp without time zone DEFAULT now() NOT NULL,
+    estado character varying(5) NOT NULL
+);
+
+
+ALTER TABLE bodegas OWNER TO postgres;
+
+--
+-- TOC entry 253 (class 1259 OID 47085)
+-- Name: bodegas_id_seq; Type: SEQUENCE; Schema: inventario; Owner: postgres
+--
+
+CREATE SEQUENCE bodegas_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE bodegas_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3583 (class 0 OID 0)
+-- Dependencies: 253
+-- Name: bodegas_id_seq; Type: SEQUENCE OWNED BY; Schema: inventario; Owner: postgres
+--
+
+ALTER SEQUENCE bodegas_id_seq OWNED BY bodegas.id;
+
+
+--
+-- TOC entry 199 (class 1259 OID 16468)
 -- Name: catalogos; Type: TABLE; Schema: inventario; Owner: postgres
 --
 
@@ -570,7 +983,7 @@ CREATE TABLE catalogos (
 ALTER TABLE catalogos OWNER TO postgres;
 
 --
--- TOC entry 199 (class 1259 OID 16471)
+-- TOC entry 200 (class 1259 OID 16471)
 -- Name: catalogos_id_seq; Type: SEQUENCE; Schema: inventario; Owner: postgres
 --
 
@@ -585,8 +998,8 @@ CREATE SEQUENCE catalogos_id_seq
 ALTER TABLE catalogos_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3493 (class 0 OID 0)
--- Dependencies: 199
+-- TOC entry 3584 (class 0 OID 0)
+-- Dependencies: 200
 -- Name: catalogos_id_seq; Type: SEQUENCE OWNED BY; Schema: inventario; Owner: postgres
 --
 
@@ -594,7 +1007,7 @@ ALTER SEQUENCE catalogos_id_seq OWNED BY catalogos.id;
 
 
 --
--- TOC entry 200 (class 1259 OID 16473)
+-- TOC entry 201 (class 1259 OID 16473)
 -- Name: categorias; Type: TABLE; Schema: inventario; Owner: postgres
 --
 
@@ -611,7 +1024,7 @@ CREATE TABLE categorias (
 ALTER TABLE categorias OWNER TO postgres;
 
 --
--- TOC entry 201 (class 1259 OID 16479)
+-- TOC entry 202 (class 1259 OID 16479)
 -- Name: categorias_id_seq; Type: SEQUENCE; Schema: inventario; Owner: postgres
 --
 
@@ -626,8 +1039,8 @@ CREATE SEQUENCE categorias_id_seq
 ALTER TABLE categorias_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3494 (class 0 OID 0)
--- Dependencies: 201
+-- TOC entry 3585 (class 0 OID 0)
+-- Dependencies: 202
 -- Name: categorias_id_seq; Type: SEQUENCE OWNED BY; Schema: inventario; Owner: postgres
 --
 
@@ -635,7 +1048,7 @@ ALTER SEQUENCE categorias_id_seq OWNED BY categorias.id;
 
 
 --
--- TOC entry 202 (class 1259 OID 16481)
+-- TOC entry 203 (class 1259 OID 16481)
 -- Name: descripcion_producto; Type: TABLE; Schema: inventario; Owner: postgres
 --
 
@@ -652,8 +1065,8 @@ CREATE TABLE descripcion_producto (
 ALTER TABLE descripcion_producto OWNER TO postgres;
 
 --
--- TOC entry 3495 (class 0 OID 0)
--- Dependencies: 202
+-- TOC entry 3586 (class 0 OID 0)
+-- Dependencies: 203
 -- Name: COLUMN descripcion_producto.descripcion_corta; Type: COMMENT; Schema: inventario; Owner: postgres
 --
 
@@ -661,8 +1074,8 @@ COMMENT ON COLUMN descripcion_producto.descripcion_corta IS 'descripcion en caso
 
 
 --
--- TOC entry 3496 (class 0 OID 0)
--- Dependencies: 202
+-- TOC entry 3587 (class 0 OID 0)
+-- Dependencies: 203
 -- Name: COLUMN descripcion_producto.descripcion_proveedor; Type: COMMENT; Schema: inventario; Owner: postgres
 --
 
@@ -670,7 +1083,7 @@ COMMENT ON COLUMN descripcion_producto.descripcion_proveedor IS 'descripcion par
 
 
 --
--- TOC entry 203 (class 1259 OID 16487)
+-- TOC entry 204 (class 1259 OID 16487)
 -- Name: descripcion_producto_id_seq; Type: SEQUENCE; Schema: inventario; Owner: postgres
 --
 
@@ -685,8 +1098,8 @@ CREATE SEQUENCE descripcion_producto_id_seq
 ALTER TABLE descripcion_producto_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3497 (class 0 OID 0)
--- Dependencies: 203
+-- TOC entry 3588 (class 0 OID 0)
+-- Dependencies: 204
 -- Name: descripcion_producto_id_seq; Type: SEQUENCE OWNED BY; Schema: inventario; Owner: postgres
 --
 
@@ -694,7 +1107,7 @@ ALTER SEQUENCE descripcion_producto_id_seq OWNED BY descripcion_producto.id;
 
 
 --
--- TOC entry 204 (class 1259 OID 16489)
+-- TOC entry 205 (class 1259 OID 16489)
 -- Name: estado_descriptivo; Type: TABLE; Schema: inventario; Owner: postgres
 --
 
@@ -710,7 +1123,7 @@ CREATE TABLE estado_descriptivo (
 ALTER TABLE estado_descriptivo OWNER TO postgres;
 
 --
--- TOC entry 205 (class 1259 OID 16495)
+-- TOC entry 206 (class 1259 OID 16495)
 -- Name: estado_descriptivo_id_seq; Type: SEQUENCE; Schema: inventario; Owner: postgres
 --
 
@@ -725,8 +1138,8 @@ CREATE SEQUENCE estado_descriptivo_id_seq
 ALTER TABLE estado_descriptivo_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3498 (class 0 OID 0)
--- Dependencies: 205
+-- TOC entry 3589 (class 0 OID 0)
+-- Dependencies: 206
 -- Name: estado_descriptivo_id_seq; Type: SEQUENCE OWNED BY; Schema: inventario; Owner: postgres
 --
 
@@ -734,7 +1147,7 @@ ALTER SEQUENCE estado_descriptivo_id_seq OWNED BY estado_descriptivo.id;
 
 
 --
--- TOC entry 206 (class 1259 OID 16497)
+-- TOC entry 207 (class 1259 OID 16497)
 -- Name: garantias; Type: TABLE; Schema: inventario; Owner: postgres
 --
 
@@ -752,8 +1165,8 @@ CREATE TABLE garantias (
 ALTER TABLE garantias OWNER TO postgres;
 
 --
--- TOC entry 3499 (class 0 OID 0)
--- Dependencies: 206
+-- TOC entry 3590 (class 0 OID 0)
+-- Dependencies: 207
 -- Name: COLUMN garantias.duracion; Type: COMMENT; Schema: inventario; Owner: postgres
 --
 
@@ -761,7 +1174,7 @@ COMMENT ON COLUMN garantias.duracion IS 'duracion en meses de la garantia';
 
 
 --
--- TOC entry 207 (class 1259 OID 16503)
+-- TOC entry 208 (class 1259 OID 16503)
 -- Name: garantias_id_seq; Type: SEQUENCE; Schema: inventario; Owner: postgres
 --
 
@@ -776,8 +1189,8 @@ CREATE SEQUENCE garantias_id_seq
 ALTER TABLE garantias_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3500 (class 0 OID 0)
--- Dependencies: 207
+-- TOC entry 3591 (class 0 OID 0)
+-- Dependencies: 208
 -- Name: garantias_id_seq; Type: SEQUENCE OWNED BY; Schema: inventario; Owner: postgres
 --
 
@@ -785,7 +1198,7 @@ ALTER SEQUENCE garantias_id_seq OWNED BY garantias.id;
 
 
 --
--- TOC entry 208 (class 1259 OID 16505)
+-- TOC entry 209 (class 1259 OID 16505)
 -- Name: imagenes_productos; Type: TABLE; Schema: inventario; Owner: postgres
 --
 
@@ -803,8 +1216,8 @@ CREATE TABLE imagenes_productos (
 ALTER TABLE imagenes_productos OWNER TO postgres;
 
 --
--- TOC entry 3501 (class 0 OID 0)
--- Dependencies: 208
+-- TOC entry 3592 (class 0 OID 0)
+-- Dependencies: 209
 -- Name: COLUMN imagenes_productos.id; Type: COMMENT; Schema: inventario; Owner: postgres
 --
 
@@ -812,8 +1225,8 @@ COMMENT ON COLUMN imagenes_productos.id IS 'identificador';
 
 
 --
--- TOC entry 3502 (class 0 OID 0)
--- Dependencies: 208
+-- TOC entry 3593 (class 0 OID 0)
+-- Dependencies: 209
 -- Name: COLUMN imagenes_productos.nombre; Type: COMMENT; Schema: inventario; Owner: postgres
 --
 
@@ -821,8 +1234,8 @@ COMMENT ON COLUMN imagenes_productos.nombre IS 'nombre de la imagen';
 
 
 --
--- TOC entry 3503 (class 0 OID 0)
--- Dependencies: 208
+-- TOC entry 3594 (class 0 OID 0)
+-- Dependencies: 209
 -- Name: COLUMN imagenes_productos.direccion; Type: COMMENT; Schema: inventario; Owner: postgres
 --
 
@@ -830,8 +1243,8 @@ COMMENT ON COLUMN imagenes_productos.direccion IS 'direccion donde se encuentra 
 
 
 --
--- TOC entry 3504 (class 0 OID 0)
--- Dependencies: 208
+-- TOC entry 3595 (class 0 OID 0)
+-- Dependencies: 209
 -- Name: COLUMN imagenes_productos.tipo_imagen; Type: COMMENT; Schema: inventario; Owner: postgres
 --
 
@@ -839,7 +1252,7 @@ COMMENT ON COLUMN imagenes_productos.tipo_imagen IS 'codigo del tipo de imagen';
 
 
 --
--- TOC entry 209 (class 1259 OID 16509)
+-- TOC entry 210 (class 1259 OID 16509)
 -- Name: marcas; Type: TABLE; Schema: inventario; Owner: postgres
 --
 
@@ -855,7 +1268,7 @@ CREATE TABLE marcas (
 ALTER TABLE marcas OWNER TO postgres;
 
 --
--- TOC entry 210 (class 1259 OID 16515)
+-- TOC entry 211 (class 1259 OID 16515)
 -- Name: marcas_id_seq; Type: SEQUENCE; Schema: inventario; Owner: postgres
 --
 
@@ -870,8 +1283,8 @@ CREATE SEQUENCE marcas_id_seq
 ALTER TABLE marcas_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3505 (class 0 OID 0)
--- Dependencies: 210
+-- TOC entry 3596 (class 0 OID 0)
+-- Dependencies: 211
 -- Name: marcas_id_seq; Type: SEQUENCE OWNED BY; Schema: inventario; Owner: postgres
 --
 
@@ -879,7 +1292,7 @@ ALTER SEQUENCE marcas_id_seq OWNED BY marcas.id;
 
 
 --
--- TOC entry 211 (class 1259 OID 16517)
+-- TOC entry 212 (class 1259 OID 16517)
 -- Name: modelos; Type: TABLE; Schema: inventario; Owner: postgres
 --
 
@@ -895,7 +1308,7 @@ CREATE TABLE modelos (
 ALTER TABLE modelos OWNER TO postgres;
 
 --
--- TOC entry 212 (class 1259 OID 16523)
+-- TOC entry 213 (class 1259 OID 16523)
 -- Name: modelos_id_seq; Type: SEQUENCE; Schema: inventario; Owner: postgres
 --
 
@@ -910,8 +1323,8 @@ CREATE SEQUENCE modelos_id_seq
 ALTER TABLE modelos_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3506 (class 0 OID 0)
--- Dependencies: 212
+-- TOC entry 3597 (class 0 OID 0)
+-- Dependencies: 213
 -- Name: modelos_id_seq; Type: SEQUENCE OWNED BY; Schema: inventario; Owner: postgres
 --
 
@@ -919,7 +1332,7 @@ ALTER SEQUENCE modelos_id_seq OWNED BY modelos.id;
 
 
 --
--- TOC entry 213 (class 1259 OID 16525)
+-- TOC entry 214 (class 1259 OID 16525)
 -- Name: productos; Type: TABLE; Schema: inventario; Owner: postgres
 --
 
@@ -939,14 +1352,15 @@ CREATE TABLE productos (
     cantidad integer NOT NULL,
     descripcion character varying(500) NOT NULL,
     codigo_baras character varying(15),
-    tipo_consumo integer NOT NULL
+    tipo_consumo integer NOT NULL,
+    bodega integer
 );
 
 
 ALTER TABLE productos OWNER TO postgres;
 
 --
--- TOC entry 214 (class 1259 OID 16531)
+-- TOC entry 215 (class 1259 OID 16531)
 -- Name: productos_id_seq; Type: SEQUENCE; Schema: inventario; Owner: postgres
 --
 
@@ -961,8 +1375,8 @@ CREATE SEQUENCE productos_id_seq
 ALTER TABLE productos_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3507 (class 0 OID 0)
--- Dependencies: 214
+-- TOC entry 3598 (class 0 OID 0)
+-- Dependencies: 215
 -- Name: productos_id_seq; Type: SEQUENCE OWNED BY; Schema: inventario; Owner: postgres
 --
 
@@ -970,7 +1384,7 @@ ALTER SEQUENCE productos_id_seq OWNED BY productos.id;
 
 
 --
--- TOC entry 215 (class 1259 OID 16533)
+-- TOC entry 216 (class 1259 OID 16533)
 -- Name: productos_impuestos; Type: TABLE; Schema: inventario; Owner: postgres
 --
 
@@ -984,7 +1398,7 @@ CREATE TABLE productos_impuestos (
 ALTER TABLE productos_impuestos OWNER TO postgres;
 
 --
--- TOC entry 216 (class 1259 OID 16536)
+-- TOC entry 217 (class 1259 OID 16536)
 -- Name: proveedores; Type: TABLE; Schema: inventario; Owner: postgres
 --
 
@@ -992,14 +1406,24 @@ CREATE TABLE proveedores (
     id integer NOT NULL,
     nombre character varying(250) NOT NULL,
     ruc character varying(15) NOT NULL,
-    direccion character varying(250) NOT NULL
+    direccion character varying(250) NOT NULL,
+    id_empresa integer NOT NULL
 );
 
 
 ALTER TABLE proveedores OWNER TO postgres;
 
 --
--- TOC entry 217 (class 1259 OID 16542)
+-- TOC entry 3599 (class 0 OID 0)
+-- Dependencies: 217
+-- Name: COLUMN proveedores.id_empresa; Type: COMMENT; Schema: inventario; Owner: postgres
+--
+
+COMMENT ON COLUMN proveedores.id_empresa IS 'conenta el probedor con los datos de su empresa';
+
+
+--
+-- TOC entry 218 (class 1259 OID 16542)
 -- Name: proveedores_id_seq; Type: SEQUENCE; Schema: inventario; Owner: postgres
 --
 
@@ -1014,8 +1438,8 @@ CREATE SEQUENCE proveedores_id_seq
 ALTER TABLE proveedores_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3508 (class 0 OID 0)
--- Dependencies: 217
+-- TOC entry 3600 (class 0 OID 0)
+-- Dependencies: 218
 -- Name: proveedores_id_seq; Type: SEQUENCE OWNED BY; Schema: inventario; Owner: postgres
 --
 
@@ -1023,102 +1447,7 @@ ALTER SEQUENCE proveedores_id_seq OWNED BY proveedores.id;
 
 
 --
--- TOC entry 218 (class 1259 OID 16544)
--- Name: sucursal; Type: TABLE; Schema: inventario; Owner: postgres
---
-
-CREATE TABLE sucursal (
-    id integer NOT NULL,
-    nombre character varying(250) NOT NULL,
-    id_localidad character varying(25) NOT NULL,
-    id_responsable character varying(25) NOT NULL,
-    fecha timestamp with time zone NOT NULL,
-    estado character varying(5) NOT NULL
-);
-
-
-ALTER TABLE sucursal OWNER TO postgres;
-
---
--- TOC entry 3509 (class 0 OID 0)
--- Dependencies: 218
--- Name: COLUMN sucursal.id; Type: COMMENT; Schema: inventario; Owner: postgres
---
-
-COMMENT ON COLUMN sucursal.id IS 'identificados untoincremental';
-
-
---
--- TOC entry 3510 (class 0 OID 0)
--- Dependencies: 218
--- Name: COLUMN sucursal.nombre; Type: COMMENT; Schema: inventario; Owner: postgres
---
-
-COMMENT ON COLUMN sucursal.nombre IS 'nombre de la bodega';
-
-
---
--- TOC entry 3511 (class 0 OID 0)
--- Dependencies: 218
--- Name: COLUMN sucursal.id_localidad; Type: COMMENT; Schema: inventario; Owner: postgres
---
-
-COMMENT ON COLUMN sucursal.id_localidad IS 'lugar direccion de la bodega';
-
-
---
--- TOC entry 3512 (class 0 OID 0)
--- Dependencies: 218
--- Name: COLUMN sucursal.id_responsable; Type: COMMENT; Schema: inventario; Owner: postgres
---
-
-COMMENT ON COLUMN sucursal.id_responsable IS 'persona responsable de la bodega';
-
-
---
--- TOC entry 3513 (class 0 OID 0)
--- Dependencies: 218
--- Name: COLUMN sucursal.fecha; Type: COMMENT; Schema: inventario; Owner: postgres
---
-
-COMMENT ON COLUMN sucursal.fecha IS 'fecha de creacion de la bodega en el sistema';
-
-
---
--- TOC entry 3514 (class 0 OID 0)
--- Dependencies: 218
--- Name: COLUMN sucursal.estado; Type: COMMENT; Schema: inventario; Owner: postgres
---
-
-COMMENT ON COLUMN sucursal.estado IS 'estado de la bodega';
-
-
---
--- TOC entry 219 (class 1259 OID 16547)
--- Name: sucursal_id_seq; Type: SEQUENCE; Schema: inventario; Owner: postgres
---
-
-CREATE SEQUENCE sucursal_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE sucursal_id_seq OWNER TO postgres;
-
---
--- TOC entry 3515 (class 0 OID 0)
--- Dependencies: 219
--- Name: sucursal_id_seq; Type: SEQUENCE OWNED BY; Schema: inventario; Owner: postgres
---
-
-ALTER SEQUENCE sucursal_id_seq OWNED BY sucursal.id;
-
-
---
--- TOC entry 220 (class 1259 OID 16549)
+-- TOC entry 219 (class 1259 OID 16549)
 -- Name: tipo_consumo; Type: TABLE; Schema: inventario; Owner: postgres
 --
 
@@ -1134,7 +1463,7 @@ CREATE TABLE tipo_consumo (
 ALTER TABLE tipo_consumo OWNER TO postgres;
 
 --
--- TOC entry 221 (class 1259 OID 16555)
+-- TOC entry 220 (class 1259 OID 16555)
 -- Name: tipo_consumo_id_seq; Type: SEQUENCE; Schema: inventario; Owner: postgres
 --
 
@@ -1149,8 +1478,8 @@ CREATE SEQUENCE tipo_consumo_id_seq
 ALTER TABLE tipo_consumo_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3516 (class 0 OID 0)
--- Dependencies: 221
+-- TOC entry 3601 (class 0 OID 0)
+-- Dependencies: 220
 -- Name: tipo_consumo_id_seq; Type: SEQUENCE OWNED BY; Schema: inventario; Owner: postgres
 --
 
@@ -1158,7 +1487,7 @@ ALTER SEQUENCE tipo_consumo_id_seq OWNED BY tipo_consumo.id;
 
 
 --
--- TOC entry 222 (class 1259 OID 16557)
+-- TOC entry 221 (class 1259 OID 16557)
 -- Name: tipos_catalogos; Type: TABLE; Schema: inventario; Owner: postgres
 --
 
@@ -1176,7 +1505,7 @@ CREATE TABLE tipos_catalogos (
 ALTER TABLE tipos_catalogos OWNER TO postgres;
 
 --
--- TOC entry 223 (class 1259 OID 16563)
+-- TOC entry 222 (class 1259 OID 16563)
 -- Name: tipos_catalogos_id_seq; Type: SEQUENCE; Schema: inventario; Owner: postgres
 --
 
@@ -1191,8 +1520,8 @@ CREATE SEQUENCE tipos_catalogos_id_seq
 ALTER TABLE tipos_catalogos_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3517 (class 0 OID 0)
--- Dependencies: 223
+-- TOC entry 3602 (class 0 OID 0)
+-- Dependencies: 222
 -- Name: tipos_catalogos_id_seq; Type: SEQUENCE OWNED BY; Schema: inventario; Owner: postgres
 --
 
@@ -1200,7 +1529,7 @@ ALTER SEQUENCE tipos_catalogos_id_seq OWNED BY tipos_catalogos.id;
 
 
 --
--- TOC entry 224 (class 1259 OID 16565)
+-- TOC entry 223 (class 1259 OID 16565)
 -- Name: tipos_categorias; Type: TABLE; Schema: inventario; Owner: postgres
 --
 
@@ -1216,7 +1545,7 @@ CREATE TABLE tipos_categorias (
 ALTER TABLE tipos_categorias OWNER TO postgres;
 
 --
--- TOC entry 225 (class 1259 OID 16571)
+-- TOC entry 224 (class 1259 OID 16571)
 -- Name: tipos_categorias_id_seq; Type: SEQUENCE; Schema: inventario; Owner: postgres
 --
 
@@ -1231,8 +1560,8 @@ CREATE SEQUENCE tipos_categorias_id_seq
 ALTER TABLE tipos_categorias_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3518 (class 0 OID 0)
--- Dependencies: 225
+-- TOC entry 3603 (class 0 OID 0)
+-- Dependencies: 224
 -- Name: tipos_categorias_id_seq; Type: SEQUENCE OWNED BY; Schema: inventario; Owner: postgres
 --
 
@@ -1240,7 +1569,7 @@ ALTER SEQUENCE tipos_categorias_id_seq OWNED BY tipos_categorias.id;
 
 
 --
--- TOC entry 226 (class 1259 OID 16573)
+-- TOC entry 225 (class 1259 OID 16573)
 -- Name: tipos_garantias; Type: TABLE; Schema: inventario; Owner: postgres
 --
 
@@ -1256,8 +1585,8 @@ CREATE TABLE tipos_garantias (
 ALTER TABLE tipos_garantias OWNER TO postgres;
 
 --
--- TOC entry 3519 (class 0 OID 0)
--- Dependencies: 226
+-- TOC entry 3604 (class 0 OID 0)
+-- Dependencies: 225
 -- Name: COLUMN tipos_garantias.id; Type: COMMENT; Schema: inventario; Owner: postgres
 --
 
@@ -1265,8 +1594,8 @@ COMMENT ON COLUMN tipos_garantias.id IS 'identificador';
 
 
 --
--- TOC entry 3520 (class 0 OID 0)
--- Dependencies: 226
+-- TOC entry 3605 (class 0 OID 0)
+-- Dependencies: 225
 -- Name: COLUMN tipos_garantias.fecha; Type: COMMENT; Schema: inventario; Owner: postgres
 --
 
@@ -1274,8 +1603,8 @@ COMMENT ON COLUMN tipos_garantias.fecha IS 'fechade creacion del tipo de garanti
 
 
 --
--- TOC entry 3521 (class 0 OID 0)
--- Dependencies: 226
+-- TOC entry 3606 (class 0 OID 0)
+-- Dependencies: 225
 -- Name: COLUMN tipos_garantias.estado; Type: COMMENT; Schema: inventario; Owner: postgres
 --
 
@@ -1283,7 +1612,7 @@ COMMENT ON COLUMN tipos_garantias.estado IS 'define el estado del tipo de garant
 
 
 --
--- TOC entry 227 (class 1259 OID 16579)
+-- TOC entry 226 (class 1259 OID 16579)
 -- Name: tipos_garantias_id_seq; Type: SEQUENCE; Schema: inventario; Owner: postgres
 --
 
@@ -1298,8 +1627,8 @@ CREATE SEQUENCE tipos_garantias_id_seq
 ALTER TABLE tipos_garantias_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3522 (class 0 OID 0)
--- Dependencies: 227
+-- TOC entry 3607 (class 0 OID 0)
+-- Dependencies: 226
 -- Name: tipos_garantias_id_seq; Type: SEQUENCE OWNED BY; Schema: inventario; Owner: postgres
 --
 
@@ -1307,7 +1636,7 @@ ALTER SEQUENCE tipos_garantias_id_seq OWNED BY tipos_garantias.id;
 
 
 --
--- TOC entry 228 (class 1259 OID 16581)
+-- TOC entry 227 (class 1259 OID 16581)
 -- Name: tipos_imagenes_productos; Type: TABLE; Schema: inventario; Owner: postgres
 --
 
@@ -1322,8 +1651,8 @@ CREATE TABLE tipos_imagenes_productos (
 ALTER TABLE tipos_imagenes_productos OWNER TO postgres;
 
 --
--- TOC entry 3523 (class 0 OID 0)
--- Dependencies: 228
+-- TOC entry 3608 (class 0 OID 0)
+-- Dependencies: 227
 -- Name: TABLE tipos_imagenes_productos; Type: COMMENT; Schema: inventario; Owner: postgres
 --
 
@@ -1331,8 +1660,8 @@ COMMENT ON TABLE tipos_imagenes_productos IS 'contiene las direccioenes de las i
 
 
 --
--- TOC entry 3524 (class 0 OID 0)
--- Dependencies: 228
+-- TOC entry 3609 (class 0 OID 0)
+-- Dependencies: 227
 -- Name: COLUMN tipos_imagenes_productos.id; Type: COMMENT; Schema: inventario; Owner: postgres
 --
 
@@ -1340,8 +1669,8 @@ COMMENT ON COLUMN tipos_imagenes_productos.id IS 'identificador de clave primari
 
 
 --
--- TOC entry 3525 (class 0 OID 0)
--- Dependencies: 228
+-- TOC entry 3610 (class 0 OID 0)
+-- Dependencies: 227
 -- Name: COLUMN tipos_imagenes_productos.nombre; Type: COMMENT; Schema: inventario; Owner: postgres
 --
 
@@ -1349,8 +1678,8 @@ COMMENT ON COLUMN tipos_imagenes_productos.nombre IS 'nombre del tipo de imagen'
 
 
 --
--- TOC entry 3526 (class 0 OID 0)
--- Dependencies: 228
+-- TOC entry 3611 (class 0 OID 0)
+-- Dependencies: 227
 -- Name: COLUMN tipos_imagenes_productos.estado; Type: COMMENT; Schema: inventario; Owner: postgres
 --
 
@@ -1358,7 +1687,7 @@ COMMENT ON COLUMN tipos_imagenes_productos.estado IS 'define si esta activo o no
 
 
 --
--- TOC entry 229 (class 1259 OID 16584)
+-- TOC entry 228 (class 1259 OID 16584)
 -- Name: tipos_imagenes_productos_id_seq; Type: SEQUENCE; Schema: inventario; Owner: postgres
 --
 
@@ -1373,8 +1702,8 @@ CREATE SEQUENCE tipos_imagenes_productos_id_seq
 ALTER TABLE tipos_imagenes_productos_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3527 (class 0 OID 0)
--- Dependencies: 229
+-- TOC entry 3612 (class 0 OID 0)
+-- Dependencies: 228
 -- Name: tipos_imagenes_productos_id_seq; Type: SEQUENCE OWNED BY; Schema: inventario; Owner: postgres
 --
 
@@ -1382,7 +1711,7 @@ ALTER SEQUENCE tipos_imagenes_productos_id_seq OWNED BY tipos_imagenes_productos
 
 
 --
--- TOC entry 230 (class 1259 OID 16586)
+-- TOC entry 229 (class 1259 OID 16586)
 -- Name: tipos_productos; Type: TABLE; Schema: inventario; Owner: postgres
 --
 
@@ -1398,7 +1727,7 @@ CREATE TABLE tipos_productos (
 ALTER TABLE tipos_productos OWNER TO postgres;
 
 --
--- TOC entry 231 (class 1259 OID 16592)
+-- TOC entry 230 (class 1259 OID 16592)
 -- Name: tipos_productos_id_seq; Type: SEQUENCE; Schema: inventario; Owner: postgres
 --
 
@@ -1413,8 +1742,8 @@ CREATE SEQUENCE tipos_productos_id_seq
 ALTER TABLE tipos_productos_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3528 (class 0 OID 0)
--- Dependencies: 231
+-- TOC entry 3613 (class 0 OID 0)
+-- Dependencies: 230
 -- Name: tipos_productos_id_seq; Type: SEQUENCE OWNED BY; Schema: inventario; Owner: postgres
 --
 
@@ -1422,7 +1751,7 @@ ALTER SEQUENCE tipos_productos_id_seq OWNED BY tipos_productos.id;
 
 
 --
--- TOC entry 232 (class 1259 OID 16594)
+-- TOC entry 231 (class 1259 OID 16594)
 -- Name: ubicaciones; Type: TABLE; Schema: inventario; Owner: postgres
 --
 
@@ -1438,7 +1767,7 @@ CREATE TABLE ubicaciones (
 ALTER TABLE ubicaciones OWNER TO postgres;
 
 --
--- TOC entry 233 (class 1259 OID 16600)
+-- TOC entry 232 (class 1259 OID 16600)
 -- Name: ubicaciones_id_seq; Type: SEQUENCE; Schema: inventario; Owner: postgres
 --
 
@@ -1453,8 +1782,8 @@ CREATE SEQUENCE ubicaciones_id_seq
 ALTER TABLE ubicaciones_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3529 (class 0 OID 0)
--- Dependencies: 233
+-- TOC entry 3614 (class 0 OID 0)
+-- Dependencies: 232
 -- Name: ubicaciones_id_seq; Type: SEQUENCE OWNED BY; Schema: inventario; Owner: postgres
 --
 
@@ -1464,7 +1793,7 @@ ALTER SEQUENCE ubicaciones_id_seq OWNED BY ubicaciones.id;
 SET search_path = public, pg_catalog;
 
 --
--- TOC entry 234 (class 1259 OID 16602)
+-- TOC entry 233 (class 1259 OID 16602)
 -- Name: estados; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -1478,8 +1807,8 @@ CREATE TABLE estados (
 ALTER TABLE estados OWNER TO postgres;
 
 --
--- TOC entry 3530 (class 0 OID 0)
--- Dependencies: 234
+-- TOC entry 3615 (class 0 OID 0)
+-- Dependencies: 233
 -- Name: COLUMN estados.id; Type: COMMENT; Schema: public; Owner: postgres
 --
 
@@ -1487,8 +1816,8 @@ COMMENT ON COLUMN estados.id IS 'define el identificados';
 
 
 --
--- TOC entry 3531 (class 0 OID 0)
--- Dependencies: 234
+-- TOC entry 3616 (class 0 OID 0)
+-- Dependencies: 233
 -- Name: COLUMN estados.nombre; Type: COMMENT; Schema: public; Owner: postgres
 --
 
@@ -1496,31 +1825,13 @@ COMMENT ON COLUMN estados.nombre IS 'define nombre corto del estado';
 
 
 --
--- TOC entry 235 (class 1259 OID 16605)
--- Name: localidades; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE localidades (
-    id character varying(15) NOT NULL,
-    nombre character varying(250) NOT NULL,
-    codigo character varying(5) NOT NULL,
-    id_padre character varying(15),
-    estado character varying(5) NOT NULL,
-    fecha timestamp with time zone NOT NULL,
-    codigo_telefonico character varying
-);
-
-
-ALTER TABLE localidades OWNER TO postgres;
-
---
--- TOC entry 236 (class 1259 OID 16611)
+-- TOC entry 234 (class 1259 OID 16611)
 -- Name: personas; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE personas (
     id integer NOT NULL,
-    ci_docuemto character varying(15) NOT NULL,
+    ci_documento character varying(15) NOT NULL,
     pasaporte character varying(15),
     primer_nombre character varying(50) NOT NULL,
     segundo_nombre character varying(50),
@@ -1537,17 +1848,17 @@ CREATE TABLE personas (
 ALTER TABLE personas OWNER TO postgres;
 
 --
--- TOC entry 3532 (class 0 OID 0)
--- Dependencies: 236
--- Name: COLUMN personas.ci_docuemto; Type: COMMENT; Schema: public; Owner: postgres
+-- TOC entry 3617 (class 0 OID 0)
+-- Dependencies: 234
+-- Name: COLUMN personas.ci_documento; Type: COMMENT; Schema: public; Owner: postgres
 --
 
-COMMENT ON COLUMN personas.ci_docuemto IS 'número de cedula de identidad';
+COMMENT ON COLUMN personas.ci_documento IS 'número de cedula de identidad';
 
 
 --
--- TOC entry 3533 (class 0 OID 0)
--- Dependencies: 236
+-- TOC entry 3618 (class 0 OID 0)
+-- Dependencies: 234
 -- Name: COLUMN personas.pasaporte; Type: COMMENT; Schema: public; Owner: postgres
 --
 
@@ -1555,8 +1866,8 @@ COMMENT ON COLUMN personas.pasaporte IS 'número de pasaporte';
 
 
 --
--- TOC entry 3534 (class 0 OID 0)
--- Dependencies: 236
+-- TOC entry 3619 (class 0 OID 0)
+-- Dependencies: 234
 -- Name: COLUMN personas.ruc; Type: COMMENT; Schema: public; Owner: postgres
 --
 
@@ -1564,7 +1875,7 @@ COMMENT ON COLUMN personas.ruc IS 'número de ruc';
 
 
 --
--- TOC entry 237 (class 1259 OID 16617)
+-- TOC entry 235 (class 1259 OID 16617)
 -- Name: personas_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -1579,8 +1890,8 @@ CREATE SEQUENCE personas_id_seq
 ALTER TABLE personas_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3535 (class 0 OID 0)
--- Dependencies: 237
+-- TOC entry 3620 (class 0 OID 0)
+-- Dependencies: 235
 -- Name: personas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
@@ -1588,7 +1899,7 @@ ALTER SEQUENCE personas_id_seq OWNED BY personas.id;
 
 
 --
--- TOC entry 238 (class 1259 OID 16619)
+-- TOC entry 236 (class 1259 OID 16619)
 -- Name: telefonos_personas; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -1604,7 +1915,7 @@ CREATE TABLE telefonos_personas (
 ALTER TABLE telefonos_personas OWNER TO postgres;
 
 --
--- TOC entry 239 (class 1259 OID 16625)
+-- TOC entry 237 (class 1259 OID 16625)
 -- Name: telefonos_personas_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -1619,71 +1930,18 @@ CREATE SEQUENCE telefonos_personas_id_seq
 ALTER TABLE telefonos_personas_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3536 (class 0 OID 0)
--- Dependencies: 239
+-- TOC entry 3621 (class 0 OID 0)
+-- Dependencies: 237
 -- Name: telefonos_personas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE telefonos_personas_id_seq OWNED BY telefonos_personas.id;
 
 
---
--- TOC entry 240 (class 1259 OID 16627)
--- Name: view_localidades; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW view_localidades AS
- WITH RECURSIVE path(nombre, codigo_telefonico, path, parent, id, codigo, id_padre) AS (
-         SELECT localidades.nombre,
-            localidades.codigo_telefonico,
-            '/'::text AS text,
-            NULL::text AS text,
-            localidades.id,
-            localidades.codigo,
-            localidades.id_padre
-           FROM localidades
-          WHERE ((localidades.id_padre)::text = '0'::text)
-        UNION
-         SELECT localidades.nombre,
-            localidades.codigo_telefonico,
-            ((parentpath.path ||
-                CASE parentpath.path
-                    WHEN '/'::text THEN ''::text
-                    ELSE '/'::text
-                END) || (localidades.nombre)::text),
-            parentpath.path,
-            localidades.id,
-            localidades.codigo,
-            localidades.id_padre
-           FROM localidades,
-            path parentpath
-          WHERE ((localidades.id_padre)::text = (parentpath.id)::text)
-        )
- SELECT path.nombre,
-    path.codigo_telefonico,
-    path.path,
-    path.parent,
-    path.id,
-    path.codigo,
-    path.id_padre
-   FROM path;
-
-
-ALTER TABLE view_localidades OWNER TO postgres;
-
---
--- TOC entry 3537 (class 0 OID 0)
--- Dependencies: 240
--- Name: VIEW view_localidades; Type: COMMENT; Schema: public; Owner: postgres
---
-
-COMMENT ON VIEW view_localidades IS 'crea la vista localidades, definida como arbol';
-
-
 SET search_path = usuarios, pg_catalog;
 
 --
--- TOC entry 241 (class 1259 OID 16632)
+-- TOC entry 238 (class 1259 OID 16632)
 -- Name: usuarios; Type: TABLE; Schema: usuarios; Owner: postgres
 --
 
@@ -1692,15 +1950,16 @@ CREATE TABLE usuarios (
     nick character varying(50),
     clave_clave character varying(75),
     id_estado character varying(5),
-    fecha_creacion timestamp with time zone
+    fecha_creacion timestamp with time zone,
+    estado_clave boolean DEFAULT true NOT NULL
 );
 
 
 ALTER TABLE usuarios OWNER TO postgres;
 
 --
--- TOC entry 3538 (class 0 OID 0)
--- Dependencies: 241
+-- TOC entry 3622 (class 0 OID 0)
+-- Dependencies: 238
 -- Name: COLUMN usuarios.id; Type: COMMENT; Schema: usuarios; Owner: postgres
 --
 
@@ -1708,8 +1967,8 @@ COMMENT ON COLUMN usuarios.id IS 'id usuario del sistema Nexboot';
 
 
 --
--- TOC entry 3539 (class 0 OID 0)
--- Dependencies: 241
+-- TOC entry 3623 (class 0 OID 0)
+-- Dependencies: 238
 -- Name: COLUMN usuarios.clave_clave; Type: COMMENT; Schema: usuarios; Owner: postgres
 --
 
@@ -1717,8 +1976,8 @@ COMMENT ON COLUMN usuarios.clave_clave IS 'define la clave del usuario';
 
 
 --
--- TOC entry 3540 (class 0 OID 0)
--- Dependencies: 241
+-- TOC entry 3624 (class 0 OID 0)
+-- Dependencies: 238
 -- Name: COLUMN usuarios.id_estado; Type: COMMENT; Schema: usuarios; Owner: postgres
 --
 
@@ -1726,8 +1985,8 @@ COMMENT ON COLUMN usuarios.id_estado IS 'estado del usuario';
 
 
 --
--- TOC entry 3541 (class 0 OID 0)
--- Dependencies: 241
+-- TOC entry 3625 (class 0 OID 0)
+-- Dependencies: 238
 -- Name: COLUMN usuarios.fecha_creacion; Type: COMMENT; Schema: usuarios; Owner: postgres
 --
 
@@ -1737,7 +1996,7 @@ COMMENT ON COLUMN usuarios.fecha_creacion IS 'fecha en la que fue creado el usua
 SET search_path = ventas, pg_catalog;
 
 --
--- TOC entry 242 (class 1259 OID 16638)
+-- TOC entry 239 (class 1259 OID 16638)
 -- Name: detalle_factura; Type: TABLE; Schema: ventas; Owner: postgres
 --
 
@@ -1751,7 +2010,7 @@ CREATE TABLE detalle_factura (
 ALTER TABLE detalle_factura OWNER TO postgres;
 
 --
--- TOC entry 243 (class 1259 OID 16641)
+-- TOC entry 240 (class 1259 OID 16641)
 -- Name: detalle_factura_id_seq; Type: SEQUENCE; Schema: ventas; Owner: postgres
 --
 
@@ -1766,8 +2025,8 @@ CREATE SEQUENCE detalle_factura_id_seq
 ALTER TABLE detalle_factura_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3542 (class 0 OID 0)
--- Dependencies: 243
+-- TOC entry 3626 (class 0 OID 0)
+-- Dependencies: 240
 -- Name: detalle_factura_id_seq; Type: SEQUENCE OWNED BY; Schema: ventas; Owner: postgres
 --
 
@@ -1775,7 +2034,7 @@ ALTER SEQUENCE detalle_factura_id_seq OWNED BY detalle_factura.id;
 
 
 --
--- TOC entry 244 (class 1259 OID 16643)
+-- TOC entry 241 (class 1259 OID 16643)
 -- Name: facturas; Type: TABLE; Schema: ventas; Owner: postgres
 --
 
@@ -1807,7 +2066,7 @@ CREATE TABLE facturas (
 ALTER TABLE facturas OWNER TO postgres;
 
 --
--- TOC entry 245 (class 1259 OID 16650)
+-- TOC entry 242 (class 1259 OID 16650)
 -- Name: facturas_id_seq; Type: SEQUENCE; Schema: ventas; Owner: postgres
 --
 
@@ -1822,8 +2081,8 @@ CREATE SEQUENCE facturas_id_seq
 ALTER TABLE facturas_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3543 (class 0 OID 0)
--- Dependencies: 245
+-- TOC entry 3627 (class 0 OID 0)
+-- Dependencies: 242
 -- Name: facturas_id_seq; Type: SEQUENCE OWNED BY; Schema: ventas; Owner: postgres
 --
 
@@ -1831,7 +2090,7 @@ ALTER SEQUENCE facturas_id_seq OWNED BY facturas.id;
 
 
 --
--- TOC entry 246 (class 1259 OID 16652)
+-- TOC entry 243 (class 1259 OID 16652)
 -- Name: formas_pago; Type: TABLE; Schema: ventas; Owner: postgres
 --
 
@@ -1847,7 +2106,7 @@ CREATE TABLE formas_pago (
 ALTER TABLE formas_pago OWNER TO postgres;
 
 --
--- TOC entry 247 (class 1259 OID 16658)
+-- TOC entry 244 (class 1259 OID 16658)
 -- Name: formas_pago_facturas; Type: TABLE; Schema: ventas; Owner: postgres
 --
 
@@ -1861,7 +2120,7 @@ CREATE TABLE formas_pago_facturas (
 ALTER TABLE formas_pago_facturas OWNER TO postgres;
 
 --
--- TOC entry 248 (class 1259 OID 16661)
+-- TOC entry 245 (class 1259 OID 16661)
 -- Name: formas_pago_facturas_id_seq; Type: SEQUENCE; Schema: ventas; Owner: postgres
 --
 
@@ -1876,8 +2135,8 @@ CREATE SEQUENCE formas_pago_facturas_id_seq
 ALTER TABLE formas_pago_facturas_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3544 (class 0 OID 0)
--- Dependencies: 248
+-- TOC entry 3628 (class 0 OID 0)
+-- Dependencies: 245
 -- Name: formas_pago_facturas_id_seq; Type: SEQUENCE OWNED BY; Schema: ventas; Owner: postgres
 --
 
@@ -1885,7 +2144,7 @@ ALTER SEQUENCE formas_pago_facturas_id_seq OWNED BY formas_pago_facturas.id;
 
 
 --
--- TOC entry 249 (class 1259 OID 16663)
+-- TOC entry 246 (class 1259 OID 16663)
 -- Name: formas_pago_id_seq; Type: SEQUENCE; Schema: ventas; Owner: postgres
 --
 
@@ -1900,8 +2159,8 @@ CREATE SEQUENCE formas_pago_id_seq
 ALTER TABLE formas_pago_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3545 (class 0 OID 0)
--- Dependencies: 249
+-- TOC entry 3629 (class 0 OID 0)
+-- Dependencies: 246
 -- Name: formas_pago_id_seq; Type: SEQUENCE OWNED BY; Schema: ventas; Owner: postgres
 --
 
@@ -1909,7 +2168,7 @@ ALTER SEQUENCE formas_pago_id_seq OWNED BY formas_pago.id;
 
 
 --
--- TOC entry 250 (class 1259 OID 16665)
+-- TOC entry 247 (class 1259 OID 16665)
 -- Name: producto_descuento; Type: TABLE; Schema: ventas; Owner: postgres
 --
 
@@ -1926,7 +2185,7 @@ CREATE TABLE producto_descuento (
 ALTER TABLE producto_descuento OWNER TO postgres;
 
 --
--- TOC entry 251 (class 1259 OID 16668)
+-- TOC entry 248 (class 1259 OID 16668)
 -- Name: producto_descuento_id_seq; Type: SEQUENCE; Schema: ventas; Owner: postgres
 --
 
@@ -1941,18 +2200,44 @@ CREATE SEQUENCE producto_descuento_id_seq
 ALTER TABLE producto_descuento_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3546 (class 0 OID 0)
--- Dependencies: 251
+-- TOC entry 3630 (class 0 OID 0)
+-- Dependencies: 248
 -- Name: producto_descuento_id_seq; Type: SEQUENCE OWNED BY; Schema: ventas; Owner: postgres
 --
 
 ALTER SEQUENCE producto_descuento_id_seq OWNED BY producto_descuento.id;
 
 
+SET search_path = administracion, pg_catalog;
+
+--
+-- TOC entry 3193 (class 2604 OID 45873)
+-- Name: id; Type: DEFAULT; Schema: administracion; Owner: postgres
+--
+
+ALTER TABLE ONLY empresas ALTER COLUMN id SET DEFAULT nextval('empresas_id_seq'::regclass);
+
+
+--
+-- TOC entry 3198 (class 2604 OID 47149)
+-- Name: id; Type: DEFAULT; Schema: administracion; Owner: postgres
+--
+
+ALTER TABLE ONLY imagen_empresa ALTER COLUMN id SET DEFAULT nextval('imagen_empresa_id_seq'::regclass);
+
+
+--
+-- TOC entry 3195 (class 2604 OID 47079)
+-- Name: id; Type: DEFAULT; Schema: administracion; Owner: postgres
+--
+
+ALTER TABLE ONLY sucursales ALTER COLUMN id SET DEFAULT nextval('sucursales_id_seq'::regclass);
+
+
 SET search_path = auditoria, pg_catalog;
 
 --
--- TOC entry 3127 (class 2604 OID 17040)
+-- TOC entry 3162 (class 2604 OID 17040)
 -- Name: id; Type: DEFAULT; Schema: auditoria; Owner: postgres
 --
 
@@ -1960,7 +2245,7 @@ ALTER TABLE ONLY auditoria ALTER COLUMN id SET DEFAULT nextval('auditoria_id_seq
 
 
 --
--- TOC entry 3128 (class 2604 OID 17041)
+-- TOC entry 3163 (class 2604 OID 17041)
 -- Name: id; Type: DEFAULT; Schema: auditoria; Owner: postgres
 --
 
@@ -1970,7 +2255,7 @@ ALTER TABLE ONLY ingresos_usuarios ALTER COLUMN id SET DEFAULT nextval('ingresos
 SET search_path = contabilidad, pg_catalog;
 
 --
--- TOC entry 3129 (class 2604 OID 17042)
+-- TOC entry 3164 (class 2604 OID 17042)
 -- Name: id; Type: DEFAULT; Schema: contabilidad; Owner: postgres
 --
 
@@ -1978,7 +2263,23 @@ ALTER TABLE ONLY ambitos_impuestos ALTER COLUMN id SET DEFAULT nextval('ambitos_
 
 
 --
--- TOC entry 3130 (class 2604 OID 17043)
+-- TOC entry 3206 (class 2604 OID 47988)
+-- Name: id; Type: DEFAULT; Schema: contabilidad; Owner: postgres
+--
+
+ALTER TABLE ONLY bancos ALTER COLUMN id SET DEFAULT nextval('bancos_id_seq'::regclass);
+
+
+--
+-- TOC entry 3202 (class 2604 OID 47241)
+-- Name: id; Type: DEFAULT; Schema: contabilidad; Owner: postgres
+--
+
+ALTER TABLE ONLY cuentas_contables ALTER COLUMN id SET DEFAULT nextval('cuentas_contables_id_seq'::regclass);
+
+
+--
+-- TOC entry 3165 (class 2604 OID 17043)
 -- Name: id; Type: DEFAULT; Schema: contabilidad; Owner: postgres
 --
 
@@ -1986,17 +2287,33 @@ ALTER TABLE ONLY grupo_impuestos ALTER COLUMN id SET DEFAULT nextval('grupo_impu
 
 
 --
--- TOC entry 3131 (class 2604 OID 17044)
+-- TOC entry 3166 (class 2604 OID 17044)
 -- Name: id; Type: DEFAULT; Schema: contabilidad; Owner: postgres
 --
 
 ALTER TABLE ONLY impuestos ALTER COLUMN id SET DEFAULT nextval('impuestos_id_seq'::regclass);
 
 
+--
+-- TOC entry 3200 (class 2604 OID 47171)
+-- Name: id; Type: DEFAULT; Schema: contabilidad; Owner: postgres
+--
+
+ALTER TABLE ONLY tipos_cuentas_contables ALTER COLUMN id SET DEFAULT nextval('tipo_cuenta_contable_id_seq'::regclass);
+
+
 SET search_path = inventario, pg_catalog;
 
 --
--- TOC entry 3132 (class 2604 OID 17045)
+-- TOC entry 3196 (class 2604 OID 47090)
+-- Name: id; Type: DEFAULT; Schema: inventario; Owner: postgres
+--
+
+ALTER TABLE ONLY bodegas ALTER COLUMN id SET DEFAULT nextval('bodegas_id_seq'::regclass);
+
+
+--
+-- TOC entry 3167 (class 2604 OID 17045)
 -- Name: id; Type: DEFAULT; Schema: inventario; Owner: postgres
 --
 
@@ -2004,7 +2321,7 @@ ALTER TABLE ONLY catalogos ALTER COLUMN id SET DEFAULT nextval('catalogos_id_seq
 
 
 --
--- TOC entry 3133 (class 2604 OID 17046)
+-- TOC entry 3168 (class 2604 OID 17046)
 -- Name: id; Type: DEFAULT; Schema: inventario; Owner: postgres
 --
 
@@ -2012,7 +2329,7 @@ ALTER TABLE ONLY categorias ALTER COLUMN id SET DEFAULT nextval('categorias_id_s
 
 
 --
--- TOC entry 3134 (class 2604 OID 17047)
+-- TOC entry 3169 (class 2604 OID 17047)
 -- Name: id; Type: DEFAULT; Schema: inventario; Owner: postgres
 --
 
@@ -2020,7 +2337,7 @@ ALTER TABLE ONLY descripcion_producto ALTER COLUMN id SET DEFAULT nextval('descr
 
 
 --
--- TOC entry 3135 (class 2604 OID 17048)
+-- TOC entry 3170 (class 2604 OID 17048)
 -- Name: id; Type: DEFAULT; Schema: inventario; Owner: postgres
 --
 
@@ -2028,7 +2345,7 @@ ALTER TABLE ONLY estado_descriptivo ALTER COLUMN id SET DEFAULT nextval('estado_
 
 
 --
--- TOC entry 3136 (class 2604 OID 17049)
+-- TOC entry 3171 (class 2604 OID 17049)
 -- Name: id; Type: DEFAULT; Schema: inventario; Owner: postgres
 --
 
@@ -2036,7 +2353,7 @@ ALTER TABLE ONLY garantias ALTER COLUMN id SET DEFAULT nextval('garantias_id_seq
 
 
 --
--- TOC entry 3138 (class 2604 OID 17050)
+-- TOC entry 3173 (class 2604 OID 17050)
 -- Name: id; Type: DEFAULT; Schema: inventario; Owner: postgres
 --
 
@@ -2044,7 +2361,7 @@ ALTER TABLE ONLY marcas ALTER COLUMN id SET DEFAULT nextval('marcas_id_seq'::reg
 
 
 --
--- TOC entry 3139 (class 2604 OID 17051)
+-- TOC entry 3174 (class 2604 OID 17051)
 -- Name: id; Type: DEFAULT; Schema: inventario; Owner: postgres
 --
 
@@ -2052,7 +2369,7 @@ ALTER TABLE ONLY modelos ALTER COLUMN id SET DEFAULT nextval('modelos_id_seq'::r
 
 
 --
--- TOC entry 3140 (class 2604 OID 17052)
+-- TOC entry 3175 (class 2604 OID 17052)
 -- Name: id; Type: DEFAULT; Schema: inventario; Owner: postgres
 --
 
@@ -2060,7 +2377,7 @@ ALTER TABLE ONLY productos ALTER COLUMN id SET DEFAULT nextval('productos_id_seq
 
 
 --
--- TOC entry 3141 (class 2604 OID 17053)
+-- TOC entry 3176 (class 2604 OID 17053)
 -- Name: id; Type: DEFAULT; Schema: inventario; Owner: postgres
 --
 
@@ -2068,15 +2385,7 @@ ALTER TABLE ONLY proveedores ALTER COLUMN id SET DEFAULT nextval('proveedores_id
 
 
 --
--- TOC entry 3142 (class 2604 OID 17054)
--- Name: id; Type: DEFAULT; Schema: inventario; Owner: postgres
---
-
-ALTER TABLE ONLY sucursal ALTER COLUMN id SET DEFAULT nextval('sucursal_id_seq'::regclass);
-
-
---
--- TOC entry 3143 (class 2604 OID 17055)
+-- TOC entry 3177 (class 2604 OID 17055)
 -- Name: id; Type: DEFAULT; Schema: inventario; Owner: postgres
 --
 
@@ -2084,7 +2393,7 @@ ALTER TABLE ONLY tipo_consumo ALTER COLUMN id SET DEFAULT nextval('tipo_consumo_
 
 
 --
--- TOC entry 3144 (class 2604 OID 17056)
+-- TOC entry 3178 (class 2604 OID 17056)
 -- Name: id; Type: DEFAULT; Schema: inventario; Owner: postgres
 --
 
@@ -2092,7 +2401,7 @@ ALTER TABLE ONLY tipos_catalogos ALTER COLUMN id SET DEFAULT nextval('tipos_cata
 
 
 --
--- TOC entry 3145 (class 2604 OID 17057)
+-- TOC entry 3179 (class 2604 OID 17057)
 -- Name: id; Type: DEFAULT; Schema: inventario; Owner: postgres
 --
 
@@ -2100,7 +2409,7 @@ ALTER TABLE ONLY tipos_categorias ALTER COLUMN id SET DEFAULT nextval('tipos_cat
 
 
 --
--- TOC entry 3146 (class 2604 OID 17058)
+-- TOC entry 3180 (class 2604 OID 17058)
 -- Name: id; Type: DEFAULT; Schema: inventario; Owner: postgres
 --
 
@@ -2108,7 +2417,7 @@ ALTER TABLE ONLY tipos_garantias ALTER COLUMN id SET DEFAULT nextval('tipos_gara
 
 
 --
--- TOC entry 3147 (class 2604 OID 17059)
+-- TOC entry 3181 (class 2604 OID 17059)
 -- Name: id; Type: DEFAULT; Schema: inventario; Owner: postgres
 --
 
@@ -2116,7 +2425,7 @@ ALTER TABLE ONLY tipos_imagenes_productos ALTER COLUMN id SET DEFAULT nextval('t
 
 
 --
--- TOC entry 3148 (class 2604 OID 17060)
+-- TOC entry 3182 (class 2604 OID 17060)
 -- Name: id; Type: DEFAULT; Schema: inventario; Owner: postgres
 --
 
@@ -2124,7 +2433,7 @@ ALTER TABLE ONLY tipos_productos ALTER COLUMN id SET DEFAULT nextval('tipos_prod
 
 
 --
--- TOC entry 3149 (class 2604 OID 17061)
+-- TOC entry 3183 (class 2604 OID 17061)
 -- Name: id; Type: DEFAULT; Schema: inventario; Owner: postgres
 --
 
@@ -2134,7 +2443,7 @@ ALTER TABLE ONLY ubicaciones ALTER COLUMN id SET DEFAULT nextval('ubicaciones_id
 SET search_path = public, pg_catalog;
 
 --
--- TOC entry 3150 (class 2604 OID 17062)
+-- TOC entry 3184 (class 2604 OID 17062)
 -- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -2142,7 +2451,7 @@ ALTER TABLE ONLY personas ALTER COLUMN id SET DEFAULT nextval('personas_id_seq':
 
 
 --
--- TOC entry 3151 (class 2604 OID 17063)
+-- TOC entry 3185 (class 2604 OID 17063)
 -- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -2152,7 +2461,7 @@ ALTER TABLE ONLY telefonos_personas ALTER COLUMN id SET DEFAULT nextval('telefon
 SET search_path = ventas, pg_catalog;
 
 --
--- TOC entry 3152 (class 2604 OID 17064)
+-- TOC entry 3187 (class 2604 OID 17064)
 -- Name: id; Type: DEFAULT; Schema: ventas; Owner: postgres
 --
 
@@ -2160,7 +2469,7 @@ ALTER TABLE ONLY detalle_factura ALTER COLUMN id SET DEFAULT nextval('detalle_fa
 
 
 --
--- TOC entry 3154 (class 2604 OID 17065)
+-- TOC entry 3189 (class 2604 OID 17065)
 -- Name: id; Type: DEFAULT; Schema: ventas; Owner: postgres
 --
 
@@ -2168,7 +2477,7 @@ ALTER TABLE ONLY facturas ALTER COLUMN id SET DEFAULT nextval('facturas_id_seq':
 
 
 --
--- TOC entry 3155 (class 2604 OID 17066)
+-- TOC entry 3190 (class 2604 OID 17066)
 -- Name: id; Type: DEFAULT; Schema: ventas; Owner: postgres
 --
 
@@ -2176,7 +2485,7 @@ ALTER TABLE ONLY formas_pago ALTER COLUMN id SET DEFAULT nextval('formas_pago_id
 
 
 --
--- TOC entry 3156 (class 2604 OID 17067)
+-- TOC entry 3191 (class 2604 OID 17067)
 -- Name: id; Type: DEFAULT; Schema: ventas; Owner: postgres
 --
 
@@ -2184,18 +2493,77 @@ ALTER TABLE ONLY formas_pago_facturas ALTER COLUMN id SET DEFAULT nextval('forma
 
 
 --
--- TOC entry 3157 (class 2604 OID 17068)
+-- TOC entry 3192 (class 2604 OID 17068)
 -- Name: id; Type: DEFAULT; Schema: ventas; Owner: postgres
 --
 
 ALTER TABLE ONLY producto_descuento ALTER COLUMN id SET DEFAULT nextval('producto_descuento_id_seq'::regclass);
 
 
+SET search_path = administracion, pg_catalog;
+
+--
+-- TOC entry 3533 (class 0 OID 45870)
+-- Dependencies: 250
+-- Data for Name: empresas; Type: TABLE DATA; Schema: administracion; Owner: postgres
+--
+
+COPY empresas (id, razon_social, actividad_economica, ruc_ci, nombre_comercial, id_estado, fecha_creacion) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3631 (class 0 OID 0)
+-- Dependencies: 249
+-- Name: empresas_id_seq; Type: SEQUENCE SET; Schema: administracion; Owner: postgres
+--
+
+SELECT pg_catalog.setval('empresas_id_seq', 1, false);
+
+
+--
+-- TOC entry 3539 (class 0 OID 47146)
+-- Dependencies: 256
+-- Data for Name: imagen_empresa; Type: TABLE DATA; Schema: administracion; Owner: postgres
+--
+
+COPY imagen_empresa (id, empresa, direccion_imagen_empresa, estado, fecha) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3632 (class 0 OID 0)
+-- Dependencies: 255
+-- Name: imagen_empresa_id_seq; Type: SEQUENCE SET; Schema: administracion; Owner: postgres
+--
+
+SELECT pg_catalog.setval('imagen_empresa_id_seq', 1, false);
+
+
+--
+-- TOC entry 3535 (class 0 OID 47076)
+-- Dependencies: 252
+-- Data for Name: sucursales; Type: TABLE DATA; Schema: administracion; Owner: postgres
+--
+
+COPY sucursales (id, nombre, responsable, datos_empresariales, localizacion_sucursal, datos_adiconales, codigo_sri) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3633 (class 0 OID 0)
+-- Dependencies: 251
+-- Name: sucursales_id_seq; Type: SEQUENCE SET; Schema: administracion; Owner: postgres
+--
+
+SELECT pg_catalog.setval('sucursales_id_seq', 1, false);
+
+
 SET search_path = auditoria, pg_catalog;
 
 --
--- TOC entry 3407 (class 0 OID 16422)
--- Dependencies: 187
+-- TOC entry 3471 (class 0 OID 16422)
+-- Dependencies: 188
 -- Data for Name: auditoria; Type: TABLE DATA; Schema: auditoria; Owner: postgres
 --
 
@@ -3957,21 +4325,27 @@ COPY auditoria (id, tabla_afectada, operacion, variable_anterior, variable_nueva
 1792	empresas                                     	U	(201610200928205808d484e1758,"MONTESDEOCA BENAVIDES EDWIN RUBEN","MONTESDEOCA_BENAVIDES_ED_1001843646001  ","FABRICACION DE ARTICULOS DE CERAMICA PARA LA INDUSTRIA EN GENERAL",1001843646001,,"2001-08-01 00:00:00-05","KERAPAC CONSTRUCTORA",,"Persona Natural",P,"2016-10-20 00:00:00-05")	(201610200928205808d484e1758,"MONTESDEOCA BENAVIDES EDWIN RUBEN","MONTESDEOCA_BENAVIDES_ED_1001843646001  ","FABRICACION DE ARTICULOS DE CERAMICA PARA LA INDUSTRIA EN GENERAL",1001843646001,,"2001-08-01 00:00:00-05","KERAPAC CONSTRUCTORA",,"Persona Natural",A,"2016-10-20 00:00:00-05")	2016-10-24 10:18:18.253368	postgres                                     
 1793	empresas                                     	U	(201610200928205808d484e1758,"MONTESDEOCA BENAVIDES EDWIN RUBEN","MONTESDEOCA_BENAVIDES_ED_1001843646001  ","FABRICACION DE ARTICULOS DE CERAMICA PARA LA INDUSTRIA EN GENERAL",1001843646001,,"2001-08-01 00:00:00-05","KERAPAC CONSTRUCTORA",,"Persona Natural",A,"2016-10-20 00:00:00-05")	(201610200928205808d484e1758,"MONTESDEOCA BENAVIDES EDWIN RUBEN","MONTESDEOCA_BENAVIDES_ED_1001843646001  ","FABRICACION DE ARTICULOS DE CERAMICA PARA LA INDUSTRIA EN GENERAL",1001843646001,,"2001-08-01 00:00:00-05","KERAPAC CONSTRUCTORA",,"Persona Natural",P,"2016-10-20 00:00:00-05")	2016-10-24 10:21:11.384971	postgres                                     
 1794	empresas                                     	U	(201610200928205808d484e1758,"MONTESDEOCA BENAVIDES EDWIN RUBEN","MONTESDEOCA_BENAVIDES_ED_1001843646001  ","FABRICACION DE ARTICULOS DE CERAMICA PARA LA INDUSTRIA EN GENERAL",1001843646001,,"2001-08-01 00:00:00-05","KERAPAC CONSTRUCTORA",,"Persona Natural",P,"2016-10-20 00:00:00-05")	(201610200928205808d484e1758,"MONTESDEOCA BENAVIDES EDWIN RUBEN","MONTESDEOCA_BENAVIDES_ED_1001843646001  ","FABRICACION DE ARTICULOS DE CERAMICA PARA LA INDUSTRIA EN GENERAL",1001843646001,,"2001-08-01 00:00:00-05","KERAPAC CONSTRUCTORA",,"Persona Natural",A,"2016-10-20 00:00:00-05")	2016-10-24 10:21:20.946337	postgres                                     
+1795	estados                                      	I	\N	(A,Activo,"El item seleccionado puede ser usado")	2016-12-02 11:16:06.825384	postgres                                     
+1796	estados                                      	I	\N	(A,Activo,"El item seleccionado puede ser usado")	2016-12-02 11:16:06.825384	postgres                                     
+1797	estados                                      	I	\N	(I,Inactivo,"El item seleccionado  no puede ser usado")	2016-12-02 11:17:00.253164	postgres                                     
+1798	estados                                      	I	\N	(I,Inactivo,"El item seleccionado  no puede ser usado")	2016-12-02 11:17:00.253164	postgres                                     
+1799	estados                                      	I	\N	(P,Pasivo,"El item seleccionado necesita una activacion")	2016-12-02 11:17:47.773577	postgres                                     
+1800	estados                                      	I	\N	(P,Pasivo,"El item seleccionado necesita una activacion")	2016-12-02 11:17:47.773577	postgres                                     
 \.
 
 
 --
--- TOC entry 3547 (class 0 OID 0)
--- Dependencies: 188
+-- TOC entry 3634 (class 0 OID 0)
+-- Dependencies: 189
 -- Name: auditoria_id_seq; Type: SEQUENCE SET; Schema: auditoria; Owner: postgres
 --
 
-SELECT pg_catalog.setval('auditoria_id_seq', 1794, true);
+SELECT pg_catalog.setval('auditoria_id_seq', 1800, true);
 
 
 --
--- TOC entry 3409 (class 0 OID 16430)
--- Dependencies: 189
+-- TOC entry 3473 (class 0 OID 16430)
+-- Dependencies: 190
 -- Data for Name: ingresos_usuarios; Type: TABLE DATA; Schema: auditoria; Owner: postgres
 --
 
@@ -4010,8 +4384,8 @@ COPY ingresos_usuarios (id, usuario, informacion_servidor, fecha, ip_acceso) FRO
 
 
 --
--- TOC entry 3548 (class 0 OID 0)
--- Dependencies: 190
+-- TOC entry 3635 (class 0 OID 0)
+-- Dependencies: 191
 -- Name: ingresos_usuarios_id_seq; Type: SEQUENCE SET; Schema: auditoria; Owner: postgres
 --
 
@@ -4021,8 +4395,8 @@ SELECT pg_catalog.setval('ingresos_usuarios_id_seq', 43, true);
 SET search_path = contabilidad, pg_catalog;
 
 --
--- TOC entry 3411 (class 0 OID 16438)
--- Dependencies: 191
+-- TOC entry 3475 (class 0 OID 16438)
+-- Dependencies: 192
 -- Data for Name: ambitos_impuestos; Type: TABLE DATA; Schema: contabilidad; Owner: postgres
 --
 
@@ -4031,8 +4405,8 @@ COPY ambitos_impuestos (id, nombre, estado, fecha) FROM stdin;
 
 
 --
--- TOC entry 3549 (class 0 OID 0)
--- Dependencies: 192
+-- TOC entry 3636 (class 0 OID 0)
+-- Dependencies: 193
 -- Name: ambitos_impuestos_id_seq; Type: SEQUENCE SET; Schema: contabilidad; Owner: postgres
 --
 
@@ -4040,8 +4414,46 @@ SELECT pg_catalog.setval('ambitos_impuestos_id_seq', 1, false);
 
 
 --
--- TOC entry 3413 (class 0 OID 16443)
--- Dependencies: 193
+-- TOC entry 3545 (class 0 OID 47985)
+-- Dependencies: 262
+-- Data for Name: bancos; Type: TABLE DATA; Schema: contabilidad; Owner: postgres
+--
+
+COPY bancos (id, nombre, numero_cuanta) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3637 (class 0 OID 0)
+-- Dependencies: 261
+-- Name: bancos_id_seq; Type: SEQUENCE SET; Schema: contabilidad; Owner: postgres
+--
+
+SELECT pg_catalog.setval('bancos_id_seq', 1, false);
+
+
+--
+-- TOC entry 3542 (class 0 OID 47183)
+-- Dependencies: 259
+-- Data for Name: cuentas_contables; Type: TABLE DATA; Schema: contabilidad; Owner: postgres
+--
+
+COPY cuentas_contables (id, codigo, nombre_corto, descripcion, signo_cuenta, tipo_cuenta, debe, haber) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3638 (class 0 OID 0)
+-- Dependencies: 260
+-- Name: cuentas_contables_id_seq; Type: SEQUENCE SET; Schema: contabilidad; Owner: postgres
+--
+
+SELECT pg_catalog.setval('cuentas_contables_id_seq', 1, false);
+
+
+--
+-- TOC entry 3477 (class 0 OID 16443)
+-- Dependencies: 194
 -- Data for Name: genealogia_impuestos; Type: TABLE DATA; Schema: contabilidad; Owner: postgres
 --
 
@@ -4050,8 +4462,8 @@ COPY genealogia_impuestos (id_impuesto_padre, id_impuesto_hijo) FROM stdin;
 
 
 --
--- TOC entry 3414 (class 0 OID 16446)
--- Dependencies: 194
+-- TOC entry 3478 (class 0 OID 16446)
+-- Dependencies: 195
 -- Data for Name: grupo_impuestos; Type: TABLE DATA; Schema: contabilidad; Owner: postgres
 --
 
@@ -4060,8 +4472,8 @@ COPY grupo_impuestos (id, nombre, estado, fecha) FROM stdin;
 
 
 --
--- TOC entry 3550 (class 0 OID 0)
--- Dependencies: 195
+-- TOC entry 3639 (class 0 OID 0)
+-- Dependencies: 196
 -- Name: grupo_impuestos_id_seq; Type: SEQUENCE SET; Schema: contabilidad; Owner: postgres
 --
 
@@ -4069,8 +4481,8 @@ SELECT pg_catalog.setval('grupo_impuestos_id_seq', 1, false);
 
 
 --
--- TOC entry 3416 (class 0 OID 16451)
--- Dependencies: 196
+-- TOC entry 3480 (class 0 OID 16451)
+-- Dependencies: 197
 -- Data for Name: impuestos; Type: TABLE DATA; Schema: contabilidad; Owner: postgres
 --
 
@@ -4079,19 +4491,57 @@ COPY impuestos (id, nombre, descripcion, cantidad, estado, fecha, ambito) FROM s
 
 
 --
--- TOC entry 3551 (class 0 OID 0)
--- Dependencies: 197
+-- TOC entry 3640 (class 0 OID 0)
+-- Dependencies: 198
 -- Name: impuestos_id_seq; Type: SEQUENCE SET; Schema: contabilidad; Owner: postgres
 --
 
 SELECT pg_catalog.setval('impuestos_id_seq', 1, false);
 
 
+--
+-- TOC entry 3641 (class 0 OID 0)
+-- Dependencies: 257
+-- Name: tipo_cuenta_contable_id_seq; Type: SEQUENCE SET; Schema: contabilidad; Owner: postgres
+--
+
+SELECT pg_catalog.setval('tipo_cuenta_contable_id_seq', 1, false);
+
+
+--
+-- TOC entry 3541 (class 0 OID 47168)
+-- Dependencies: 258
+-- Data for Name: tipos_cuentas_contables; Type: TABLE DATA; Schema: contabilidad; Owner: postgres
+--
+
+COPY tipos_cuentas_contables (id, nombre, descripcion, estado, fecha) FROM stdin;
+\.
+
+
 SET search_path = inventario, pg_catalog;
 
 --
--- TOC entry 3418 (class 0 OID 16468)
--- Dependencies: 198
+-- TOC entry 3537 (class 0 OID 47087)
+-- Dependencies: 254
+-- Data for Name: bodegas; Type: TABLE DATA; Schema: inventario; Owner: postgres
+--
+
+COPY bodegas (id, dependencia, nombre, calle, numero, espesificaciones, fecha, estado) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3642 (class 0 OID 0)
+-- Dependencies: 253
+-- Name: bodegas_id_seq; Type: SEQUENCE SET; Schema: inventario; Owner: postgres
+--
+
+SELECT pg_catalog.setval('bodegas_id_seq', 1, false);
+
+
+--
+-- TOC entry 3482 (class 0 OID 16468)
+-- Dependencies: 199
 -- Data for Name: catalogos; Type: TABLE DATA; Schema: inventario; Owner: postgres
 --
 
@@ -4100,8 +4550,8 @@ COPY catalogos (id, tipo_catalogo, producto) FROM stdin;
 
 
 --
--- TOC entry 3552 (class 0 OID 0)
--- Dependencies: 199
+-- TOC entry 3643 (class 0 OID 0)
+-- Dependencies: 200
 -- Name: catalogos_id_seq; Type: SEQUENCE SET; Schema: inventario; Owner: postgres
 --
 
@@ -4109,8 +4559,8 @@ SELECT pg_catalog.setval('catalogos_id_seq', 1, false);
 
 
 --
--- TOC entry 3420 (class 0 OID 16473)
--- Dependencies: 200
+-- TOC entry 3484 (class 0 OID 16473)
+-- Dependencies: 201
 -- Data for Name: categorias; Type: TABLE DATA; Schema: inventario; Owner: postgres
 --
 
@@ -4119,8 +4569,8 @@ COPY categorias (id, nombre, descripcion, tipo_categoria, estado, fecha) FROM st
 
 
 --
--- TOC entry 3553 (class 0 OID 0)
--- Dependencies: 201
+-- TOC entry 3644 (class 0 OID 0)
+-- Dependencies: 202
 -- Name: categorias_id_seq; Type: SEQUENCE SET; Schema: inventario; Owner: postgres
 --
 
@@ -4128,8 +4578,8 @@ SELECT pg_catalog.setval('categorias_id_seq', 1, false);
 
 
 --
--- TOC entry 3422 (class 0 OID 16481)
--- Dependencies: 202
+-- TOC entry 3486 (class 0 OID 16481)
+-- Dependencies: 203
 -- Data for Name: descripcion_producto; Type: TABLE DATA; Schema: inventario; Owner: postgres
 --
 
@@ -4138,8 +4588,8 @@ COPY descripcion_producto (id, producto, descripcion_corta, descripcion_proveedo
 
 
 --
--- TOC entry 3554 (class 0 OID 0)
--- Dependencies: 203
+-- TOC entry 3645 (class 0 OID 0)
+-- Dependencies: 204
 -- Name: descripcion_producto_id_seq; Type: SEQUENCE SET; Schema: inventario; Owner: postgres
 --
 
@@ -4147,8 +4597,8 @@ SELECT pg_catalog.setval('descripcion_producto_id_seq', 1, false);
 
 
 --
--- TOC entry 3424 (class 0 OID 16489)
--- Dependencies: 204
+-- TOC entry 3488 (class 0 OID 16489)
+-- Dependencies: 205
 -- Data for Name: estado_descriptivo; Type: TABLE DATA; Schema: inventario; Owner: postgres
 --
 
@@ -4157,8 +4607,8 @@ COPY estado_descriptivo (id, nombre, descripcion, estado, fecha) FROM stdin;
 
 
 --
--- TOC entry 3555 (class 0 OID 0)
--- Dependencies: 205
+-- TOC entry 3646 (class 0 OID 0)
+-- Dependencies: 206
 -- Name: estado_descriptivo_id_seq; Type: SEQUENCE SET; Schema: inventario; Owner: postgres
 --
 
@@ -4166,8 +4616,8 @@ SELECT pg_catalog.setval('estado_descriptivo_id_seq', 1, false);
 
 
 --
--- TOC entry 3426 (class 0 OID 16497)
--- Dependencies: 206
+-- TOC entry 3490 (class 0 OID 16497)
+-- Dependencies: 207
 -- Data for Name: garantias; Type: TABLE DATA; Schema: inventario; Owner: postgres
 --
 
@@ -4176,8 +4626,8 @@ COPY garantias (id, nombre, descripcion, estado, fecha, tipo_garantia, duracion)
 
 
 --
--- TOC entry 3556 (class 0 OID 0)
--- Dependencies: 207
+-- TOC entry 3647 (class 0 OID 0)
+-- Dependencies: 208
 -- Name: garantias_id_seq; Type: SEQUENCE SET; Schema: inventario; Owner: postgres
 --
 
@@ -4185,8 +4635,8 @@ SELECT pg_catalog.setval('garantias_id_seq', 1, false);
 
 
 --
--- TOC entry 3428 (class 0 OID 16505)
--- Dependencies: 208
+-- TOC entry 3492 (class 0 OID 16505)
+-- Dependencies: 209
 -- Data for Name: imagenes_productos; Type: TABLE DATA; Schema: inventario; Owner: postgres
 --
 
@@ -4195,8 +4645,8 @@ COPY imagenes_productos (id, nombre, direccion, tipo_imagen, estado, fecha, prod
 
 
 --
--- TOC entry 3429 (class 0 OID 16509)
--- Dependencies: 209
+-- TOC entry 3493 (class 0 OID 16509)
+-- Dependencies: 210
 -- Data for Name: marcas; Type: TABLE DATA; Schema: inventario; Owner: postgres
 --
 
@@ -4205,8 +4655,8 @@ COPY marcas (id, nombre, descripcion, estado, fecha) FROM stdin;
 
 
 --
--- TOC entry 3557 (class 0 OID 0)
--- Dependencies: 210
+-- TOC entry 3648 (class 0 OID 0)
+-- Dependencies: 211
 -- Name: marcas_id_seq; Type: SEQUENCE SET; Schema: inventario; Owner: postgres
 --
 
@@ -4214,8 +4664,8 @@ SELECT pg_catalog.setval('marcas_id_seq', 1, false);
 
 
 --
--- TOC entry 3431 (class 0 OID 16517)
--- Dependencies: 211
+-- TOC entry 3495 (class 0 OID 16517)
+-- Dependencies: 212
 -- Data for Name: modelos; Type: TABLE DATA; Schema: inventario; Owner: postgres
 --
 
@@ -4224,8 +4674,8 @@ COPY modelos (id, nombre, descripcion, estado, fecha) FROM stdin;
 
 
 --
--- TOC entry 3558 (class 0 OID 0)
--- Dependencies: 212
+-- TOC entry 3649 (class 0 OID 0)
+-- Dependencies: 213
 -- Name: modelos_id_seq; Type: SEQUENCE SET; Schema: inventario; Owner: postgres
 --
 
@@ -4233,18 +4683,18 @@ SELECT pg_catalog.setval('modelos_id_seq', 1, false);
 
 
 --
--- TOC entry 3433 (class 0 OID 16525)
--- Dependencies: 213
+-- TOC entry 3497 (class 0 OID 16525)
+-- Dependencies: 214
 -- Data for Name: productos; Type: TABLE DATA; Schema: inventario; Owner: postgres
 --
 
-COPY productos (id, nombre_corto, vendible, comprable, precio, costo, estado_descriptivo, categoria, garantia, marca, modelo, ubicacion, cantidad, descripcion, codigo_baras, tipo_consumo) FROM stdin;
+COPY productos (id, nombre_corto, vendible, comprable, precio, costo, estado_descriptivo, categoria, garantia, marca, modelo, ubicacion, cantidad, descripcion, codigo_baras, tipo_consumo, bodega) FROM stdin;
 \.
 
 
 --
--- TOC entry 3559 (class 0 OID 0)
--- Dependencies: 214
+-- TOC entry 3650 (class 0 OID 0)
+-- Dependencies: 215
 -- Name: productos_id_seq; Type: SEQUENCE SET; Schema: inventario; Owner: postgres
 --
 
@@ -4252,8 +4702,8 @@ SELECT pg_catalog.setval('productos_id_seq', 1, false);
 
 
 --
--- TOC entry 3435 (class 0 OID 16533)
--- Dependencies: 215
+-- TOC entry 3499 (class 0 OID 16533)
+-- Dependencies: 216
 -- Data for Name: productos_impuestos; Type: TABLE DATA; Schema: inventario; Owner: postgres
 --
 
@@ -4262,18 +4712,18 @@ COPY productos_impuestos (id, producto, inpuesto) FROM stdin;
 
 
 --
--- TOC entry 3436 (class 0 OID 16536)
--- Dependencies: 216
+-- TOC entry 3500 (class 0 OID 16536)
+-- Dependencies: 217
 -- Data for Name: proveedores; Type: TABLE DATA; Schema: inventario; Owner: postgres
 --
 
-COPY proveedores (id, nombre, ruc, direccion) FROM stdin;
+COPY proveedores (id, nombre, ruc, direccion, id_empresa) FROM stdin;
 \.
 
 
 --
--- TOC entry 3560 (class 0 OID 0)
--- Dependencies: 217
+-- TOC entry 3651 (class 0 OID 0)
+-- Dependencies: 218
 -- Name: proveedores_id_seq; Type: SEQUENCE SET; Schema: inventario; Owner: postgres
 --
 
@@ -4281,27 +4731,8 @@ SELECT pg_catalog.setval('proveedores_id_seq', 1, false);
 
 
 --
--- TOC entry 3438 (class 0 OID 16544)
--- Dependencies: 218
--- Data for Name: sucursal; Type: TABLE DATA; Schema: inventario; Owner: postgres
---
-
-COPY sucursal (id, nombre, id_localidad, id_responsable, fecha, estado) FROM stdin;
-\.
-
-
---
--- TOC entry 3561 (class 0 OID 0)
+-- TOC entry 3502 (class 0 OID 16549)
 -- Dependencies: 219
--- Name: sucursal_id_seq; Type: SEQUENCE SET; Schema: inventario; Owner: postgres
---
-
-SELECT pg_catalog.setval('sucursal_id_seq', 1, false);
-
-
---
--- TOC entry 3440 (class 0 OID 16549)
--- Dependencies: 220
 -- Data for Name: tipo_consumo; Type: TABLE DATA; Schema: inventario; Owner: postgres
 --
 
@@ -4310,8 +4741,8 @@ COPY tipo_consumo (id, nombre, descripcion, estado, fecha) FROM stdin;
 
 
 --
--- TOC entry 3562 (class 0 OID 0)
--- Dependencies: 221
+-- TOC entry 3652 (class 0 OID 0)
+-- Dependencies: 220
 -- Name: tipo_consumo_id_seq; Type: SEQUENCE SET; Schema: inventario; Owner: postgres
 --
 
@@ -4319,8 +4750,8 @@ SELECT pg_catalog.setval('tipo_consumo_id_seq', 1, false);
 
 
 --
--- TOC entry 3442 (class 0 OID 16557)
--- Dependencies: 222
+-- TOC entry 3504 (class 0 OID 16557)
+-- Dependencies: 221
 -- Data for Name: tipos_catalogos; Type: TABLE DATA; Schema: inventario; Owner: postgres
 --
 
@@ -4329,8 +4760,8 @@ COPY tipos_catalogos (id, nombre, descripcion, fecha_inicio, fecha_fin, estado, 
 
 
 --
--- TOC entry 3563 (class 0 OID 0)
--- Dependencies: 223
+-- TOC entry 3653 (class 0 OID 0)
+-- Dependencies: 222
 -- Name: tipos_catalogos_id_seq; Type: SEQUENCE SET; Schema: inventario; Owner: postgres
 --
 
@@ -4338,8 +4769,8 @@ SELECT pg_catalog.setval('tipos_catalogos_id_seq', 1, false);
 
 
 --
--- TOC entry 3444 (class 0 OID 16565)
--- Dependencies: 224
+-- TOC entry 3506 (class 0 OID 16565)
+-- Dependencies: 223
 -- Data for Name: tipos_categorias; Type: TABLE DATA; Schema: inventario; Owner: postgres
 --
 
@@ -4348,8 +4779,8 @@ COPY tipos_categorias (id, nombre, descripcion, estado, fecha) FROM stdin;
 
 
 --
--- TOC entry 3564 (class 0 OID 0)
--- Dependencies: 225
+-- TOC entry 3654 (class 0 OID 0)
+-- Dependencies: 224
 -- Name: tipos_categorias_id_seq; Type: SEQUENCE SET; Schema: inventario; Owner: postgres
 --
 
@@ -4357,8 +4788,8 @@ SELECT pg_catalog.setval('tipos_categorias_id_seq', 1, false);
 
 
 --
--- TOC entry 3446 (class 0 OID 16573)
--- Dependencies: 226
+-- TOC entry 3508 (class 0 OID 16573)
+-- Dependencies: 225
 -- Data for Name: tipos_garantias; Type: TABLE DATA; Schema: inventario; Owner: postgres
 --
 
@@ -4367,8 +4798,8 @@ COPY tipos_garantias (id, nombre, descripcion, fecha, estado) FROM stdin;
 
 
 --
--- TOC entry 3565 (class 0 OID 0)
--- Dependencies: 227
+-- TOC entry 3655 (class 0 OID 0)
+-- Dependencies: 226
 -- Name: tipos_garantias_id_seq; Type: SEQUENCE SET; Schema: inventario; Owner: postgres
 --
 
@@ -4376,8 +4807,8 @@ SELECT pg_catalog.setval('tipos_garantias_id_seq', 1, false);
 
 
 --
--- TOC entry 3448 (class 0 OID 16581)
--- Dependencies: 228
+-- TOC entry 3510 (class 0 OID 16581)
+-- Dependencies: 227
 -- Data for Name: tipos_imagenes_productos; Type: TABLE DATA; Schema: inventario; Owner: postgres
 --
 
@@ -4386,8 +4817,8 @@ COPY tipos_imagenes_productos (id, nombre, estado, fecha) FROM stdin;
 
 
 --
--- TOC entry 3566 (class 0 OID 0)
--- Dependencies: 229
+-- TOC entry 3656 (class 0 OID 0)
+-- Dependencies: 228
 -- Name: tipos_imagenes_productos_id_seq; Type: SEQUENCE SET; Schema: inventario; Owner: postgres
 --
 
@@ -4395,8 +4826,8 @@ SELECT pg_catalog.setval('tipos_imagenes_productos_id_seq', 1, false);
 
 
 --
--- TOC entry 3450 (class 0 OID 16586)
--- Dependencies: 230
+-- TOC entry 3512 (class 0 OID 16586)
+-- Dependencies: 229
 -- Data for Name: tipos_productos; Type: TABLE DATA; Schema: inventario; Owner: postgres
 --
 
@@ -4405,8 +4836,8 @@ COPY tipos_productos (id, nombre, descripcion, estado, fecha) FROM stdin;
 
 
 --
--- TOC entry 3567 (class 0 OID 0)
--- Dependencies: 231
+-- TOC entry 3657 (class 0 OID 0)
+-- Dependencies: 230
 -- Name: tipos_productos_id_seq; Type: SEQUENCE SET; Schema: inventario; Owner: postgres
 --
 
@@ -4414,8 +4845,8 @@ SELECT pg_catalog.setval('tipos_productos_id_seq', 1, false);
 
 
 --
--- TOC entry 3452 (class 0 OID 16594)
--- Dependencies: 232
+-- TOC entry 3514 (class 0 OID 16594)
+-- Dependencies: 231
 -- Data for Name: ubicaciones; Type: TABLE DATA; Schema: inventario; Owner: postgres
 --
 
@@ -4424,8 +4855,8 @@ COPY ubicaciones (id, nombre, descripcion, estado, fecha) FROM stdin;
 
 
 --
--- TOC entry 3568 (class 0 OID 0)
--- Dependencies: 233
+-- TOC entry 3658 (class 0 OID 0)
+-- Dependencies: 232
 -- Name: ubicaciones_id_seq; Type: SEQUENCE SET; Schema: inventario; Owner: postgres
 --
 
@@ -4435,1687 +4866,31 @@ SELECT pg_catalog.setval('ubicaciones_id_seq', 1, false);
 SET search_path = public, pg_catalog;
 
 --
--- TOC entry 3454 (class 0 OID 16602)
--- Dependencies: 234
+-- TOC entry 3516 (class 0 OID 16602)
+-- Dependencies: 233
 -- Data for Name: estados; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY estados (id, nombre, descripcion) FROM stdin;
+A	Activo	El item seleccionado puede ser usado
+I	Inactivo	El item seleccionado  no puede ser usado
+P	Pasivo	El item seleccionado necesita una activacion
 \.
 
 
 --
--- TOC entry 3455 (class 0 OID 16605)
--- Dependencies: 235
--- Data for Name: localidades; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY localidades (id, nombre, codigo, id_padre, estado, fecha, codigo_telefonico) FROM stdin;
-1001	IBARRA	IBA	10	A	2016-10-11 17:42:51.770289-05	\N
-1002	ANTONIO ANTE	ANT	10	A	2016-10-11 17:42:51.770289-05	\N
-1003	COTACACHI	COT	10	A	2016-10-11 17:42:51.770289-05	\N
-1004	OTAVALO	OTA	10	A	2016-10-11 17:42:51.770289-05	\N
-1005	PIMAMPIRO	PIM	10	A	2016-10-11 17:42:51.770289-05	\N
-1006	SAN MIGUEL DE URCUQUI	URC	10	A	2016-10-11 17:42:51.770289-05	\N
-100101	CARANQUI	CAR	1001	A	2016-10-11 17:42:51.770289-05	\N
-100102	GUAYAQUIL DE ALPACHACA	ALP	1001	A	2016-10-11 17:42:51.770289-05	\N
-100103	SAGRARIO	SAG	1001	A	2016-10-11 17:42:51.770289-05	\N
-100104	SAN FRANCISCO	FRA	1001	A	2016-10-11 17:42:51.770289-05	\N
-100105	LA DOLOROSA DEL PRIORATO	PIO	1001	A	2016-10-11 17:42:51.770289-05	\N
-100150	SAN MIGUEL DE IBARRA	IBA	1001	A	2016-10-11 17:42:51.770289-05	\N
-100151	AMBUQUI	AMB	1001	A	2016-10-11 17:42:51.770289-05	\N
-100152	ANGOCHAGUA	ANG	1001	A	2016-10-11 17:42:51.770289-05	\N
-100153	CAROLINA	CAR	1001	A	2016-10-11 17:42:51.770289-05	\N
-100154	LA ESPERANZA	ESP	1001	A	2016-10-11 17:42:51.770289-05	\N
-100155	LITA	LIT	1001	A	2016-10-11 17:42:51.770289-05	\N
-100156	SALINAS	SAL	1001	A	2016-10-11 17:42:51.770289-05	\N
-100157	SAN ANTONIO	ANT	1001	A	2016-10-11 17:42:51.770289-05	\N
-100201	ANDRADE MARÍN (LOURDES)	AND	1002	A	2016-10-11 17:42:51.770289-05	\N
-100202	ATUNTAQUI	ATU	1002	A	2016-10-11 17:42:51.770289-05	\N
-100251	IMBAYA (SAN LUIS DE COBUENDO)	IMB	1002	A	2016-10-11 17:42:51.770289-05	\N
-100252	SAN FRANCISCO DE NATABUELA	NAT	1002	A	2016-10-11 17:42:51.770289-05	\N
-100253	SAN JOSÉ DE CHALTURA	CHA	1002	A	2016-10-11 17:42:51.770289-05	\N
-100254	SAN ROQUE	ROQ	1002	A	2016-10-11 17:42:51.770289-05	\N
-100301	SAGRARIO	SAG	1003	A	2016-10-11 17:42:51.770289-05	\N
-100302	SAN FRANCISCO	FRA	1003	A	2016-10-11 17:42:51.770289-05	\N
-100350	COTACACHI	COT	1003	A	2016-10-11 17:42:51.770289-05	\N
-100351	APUELA	APU	1003	A	2016-10-11 17:42:51.770289-05	\N
-100352	GARCIA MORENO (LLURIMAGUA)	GMO	1003	A	2016-10-11 17:42:51.770289-05	\N
-100353	IMANTAG	IMA	1003	A	2016-10-11 17:42:51.770289-05	\N
-100354	PEÑAHERRERA	PEÑ	1003	A	2016-10-11 17:42:51.770289-05	\N
-100355	PLAZA GUTIERREZ (CALVARIO)	PGU	1003	A	2016-10-11 17:42:51.770289-05	\N
-100356	QUIROGA	1003	QUI	A	2016-10-11 17:42:51.770289-05	\N
-100357	6 DE JULIO DE CUELLAJE (CAB. EN CUELLAJE)	CUE	1003	A	2016-10-11 17:42:51.770289-05	\N
-100358	VACAS GALINDO (EL CHURO) (CAB.EN SAN MIGUEL ALTO)	VAC	1003	A	2016-10-11 17:42:51.770289-05	\N
-100550	PIMAMPIRO	PIM	1004	A	2016-10-11 17:42:51.770289-05	\N
-100551	CHUGA	CHU	1004	A	2016-10-11 17:42:51.770289-05	\N
-100552	MARIANO ACOSTA	MAC	1004	A	2016-10-11 17:42:51.770289-05	\N
-100553	SAN FRANCISCO DE SIGSIPAMBA	SIG	1004	A	2016-10-11 17:42:51.770289-05	\N
-100650	URCUQUI CABECERA CANTONAL	URC	1005	A	2016-10-11 17:42:51.770289-05	\N
-100651	CAHUASQUI	CAH	1005	A	2016-10-11 17:42:51.770289-05	\N
-100652	LA MERCED DE BUENOS AIRES	BUE	1005	A	2016-10-11 17:42:51.770289-05	\N
-100653	PABLO ARENAS	PAR	1005	A	2016-10-11 17:42:51.770289-05	\N
-100654	SAN BLAS	SBL	1005	A	2016-10-11 17:42:51.770289-05	\N
-100655	TUMBABIRO	TUM	1005	A	2016-10-11 17:42:51.770289-05	\N
-100401	JORDÁN	JOR	1004	A	2016-10-12 12:21:18.08894-05	\N
-100402	SAN LUIS	LUI	1004	A	2016-10-12 12:21:18.08894-05	\N
-100450	OTAVALO	OTA	1004	A	2016-10-12 12:21:18.08894-05	\N
-100451	DR. MIGUEL EGAS CABEZAS (PEGUCHE)	PEG	1004	A	2016-10-12 12:21:18.08894-05	\N
-100452	EUGENIO ESPEJO (CALPAQUÍ)	ESP	1004	A	2016-10-12 12:21:18.08894-05	\N
-100453	GONZÁLEZ SUÁREZ	GON	1004	A	2016-10-12 12:21:18.08894-05	\N
-100454	PATAQUÍ	PAT	1004	A	2016-10-12 12:21:18.08894-05	\N
-100455	SAN JOSÉ DE QUICHINCHE	QUI	1004	A	2016-10-12 12:21:18.08894-05	\N
-100456	SAN JUAN DE ILUMÁN	ILU	1004	A	2016-10-12 12:21:18.08894-05	\N
-100457	SAN PABLO	PAB	1004	A	2016-10-12 12:21:18.08894-05	\N
-100458	SAN RAFAEL	RAF	1004	A	2016-10-12 12:21:18.08894-05	\N
-100459	SELVA ALEGRE (CAB.EN SAN MIGUEL DE PAMPLONA)	SEL	1004	A	2016-10-12 12:21:18.08894-05	\N
-90	ZONAS NO DELIMITADAS	ZON	00	A	2016-10-14 11:41:16.627838-05	\N
-0102	GIRÓN	GIR	01	A	2016-10-14 11:41:16.627838-05	\N
-0103	GUALACEO	GUA	01	A	2016-10-14 11:41:16.627838-05	\N
-0104	NABÓN	NAB	01	A	2016-10-14 11:41:16.627838-05	\N
-0105	PAUTE	PAU	01	A	2016-10-14 11:41:16.627838-05	\N
-0106	PUCARA	PUC	01	A	2016-10-14 11:41:16.627838-05	\N
-0107	SAN FERNANDO	SAN	01	A	2016-10-14 11:41:16.627838-05	\N
-0108	SANTA ISABEL	SAN	01	A	2016-10-14 11:41:16.627838-05	\N
-0109	SIGSIG	SIG	01	A	2016-10-14 11:41:16.627838-05	\N
-0110	OÑA	OÑA	01	A	2016-10-14 11:41:16.627838-05	\N
-0111	CHORDELEG	CHO	01	A	2016-10-14 11:41:16.627838-05	\N
-0112	EL PAN	EL 	01	A	2016-10-14 11:41:16.627838-05	\N
-0113	SEVILLA DE ORO	SEV	01	A	2016-10-14 11:41:16.627838-05	\N
-0114	GUACHAPALA	GUA	01	A	2016-10-14 11:41:16.627838-05	\N
-0115	CAMILO PONCE ENRÍQUEZ	CAM	01	A	2016-10-14 11:41:16.627838-05	\N
-0201	GUARANDA	GUA	02	A	2016-10-14 11:41:16.627838-05	\N
-0202	CHILLANES	CHI	02	A	2016-10-14 11:41:16.627838-05	\N
-0203	CHIMBO	CHI	02	A	2016-10-14 11:41:16.627838-05	\N
-0204	ECHEANDÍA	ECH	02	A	2016-10-14 11:41:16.627838-05	\N
-0205	SAN MIGUEL	SAN	02	A	2016-10-14 11:41:16.627838-05	\N
-0206	CALUMA	CAL	02	A	2016-10-14 11:41:16.627838-05	\N
-0207	LAS NAVES	LAS	02	A	2016-10-14 11:41:16.627838-05	\N
-0301	AZOGUES	AZO	03	A	2016-10-14 11:41:16.627838-05	\N
-0302	BIBLIÁN	BIB	03	A	2016-10-14 11:41:16.627838-05	\N
-0303	CAÑAR	CAÑ	03	A	2016-10-14 11:41:16.627838-05	\N
-0304	LA TRONCAL	LA 	03	A	2016-10-14 11:41:16.627838-05	\N
-0305	EL TAMBO	EL 	03	A	2016-10-14 11:41:16.627838-05	\N
-0306	DÉLEG	DÉL	03	A	2016-10-14 11:41:16.627838-05	\N
-0307	SUSCAL	SUS	03	A	2016-10-14 11:41:16.627838-05	\N
-0401	TULCÁN	TUL	04	A	2016-10-14 11:41:16.627838-05	\N
-0402	BOLÍVAR	BOL	04	A	2016-10-14 11:41:16.627838-05	\N
-0403	ESPEJO	ESP	04	A	2016-10-14 11:41:16.627838-05	\N
-0404	MIRA	MIR	04	A	2016-10-14 11:41:16.627838-05	\N
-0405	MONTÚFAR	MON	04	A	2016-10-14 11:41:16.627838-05	\N
-0406	SAN PEDRO DE HUACA	SAN	04	A	2016-10-14 11:41:16.627838-05	\N
-0501	LATACUNGA	LAT	05	A	2016-10-14 11:41:16.627838-05	\N
-02	BOLIVAR	BOL	00	A	2016-10-14 11:41:16.627838-05	(032)
-03	CAÑAR	CAÑ	00	A	2016-10-14 11:41:16.627838-05	(072)
-00	ECUADOR	ECU	0	A	2016-10-11 17:02:39.77365-05	(593)
-07	EL ORO	EL 	00	A	2016-10-14 11:41:16.627838-05	(072)
-04	CARCHI	CAR	00	A	2016-10-14 11:41:16.627838-05	(062)
-06	CHIMBORAZO	CHI	00	A	2016-10-14 11:41:16.627838-05	(032)
-05	COTOPAXI	COT	00	A	2016-10-14 11:41:16.627838-05	(032)
-08	ESMERALDAS	ESM	00	A	2016-10-14 11:41:16.627838-05	(062)
-11	LOJA	LOJ	00	A	2016-10-14 11:41:16.627838-05	(072)
-12	LOS RIOS	LOS	00	A	2016-10-14 11:41:16.627838-05	(052)
-13	MANABI	MAN	00	A	2016-10-14 11:41:16.627838-05	(052)
-15	NAPO	NAP	00	A	2016-10-14 11:41:16.627838-05	(062)
-16	PASTAZA	PAS	00	A	2016-10-14 11:41:16.627838-05	(032)
-17	PICHINCHA	PIC	00	A	2016-10-14 11:41:16.627838-05	(022)
-19	ZAMORA CHINCHIPE	ZAM	00	A	2016-10-14 11:41:16.627838-05	(072)
-20	GALAPAGOS	GAL	00	A	2016-10-14 11:41:16.627838-05	(052)
-21	SUCUMBIOS	SUC	00	A	2016-10-14 11:41:16.627838-05	(062)
-23	SANTO DOMINGO DE LOS TSACHILAS	SAN	00	A	2016-10-14 11:41:16.627838-05	(022)
-24	SANTA ELENA	SAN	00	A	2016-10-14 11:41:16.627838-05	(042)
-18	TUNGURAHUA	TUN	00	A	2016-10-14 11:41:16.627838-05	(032)
-10	IMBABURA	IMB	00	A	2016-10-11 17:03:14.556837-05	(062)
-0502	LA MANÁ	LA 	05	A	2016-10-14 11:41:16.627838-05	\N
-0503	PANGUA	PAN	05	A	2016-10-14 11:41:16.627838-05	\N
-0504	PUJILI	PUJ	05	A	2016-10-14 11:41:16.627838-05	\N
-0505	SALCEDO	SAL	05	A	2016-10-14 11:41:16.627838-05	\N
-0506	SAQUISILÍ	SAQ	05	A	2016-10-14 11:41:16.627838-05	\N
-0507	SIGCHOS	SIG	05	A	2016-10-14 11:41:16.627838-05	\N
-0601	RIOBAMBA	RIO	06	A	2016-10-14 11:41:16.627838-05	\N
-0602	ALAUSI	ALA	06	A	2016-10-14 11:41:16.627838-05	\N
-0603	COLTA	COL	06	A	2016-10-14 11:41:16.627838-05	\N
-0604	CHAMBO	CHA	06	A	2016-10-14 11:41:16.627838-05	\N
-0605	CHUNCHI	CHU	06	A	2016-10-14 11:41:16.627838-05	\N
-0606	GUAMOTE	GUA	06	A	2016-10-14 11:41:16.627838-05	\N
-0607	GUANO	GUA	06	A	2016-10-14 11:41:16.627838-05	\N
-0608	PALLATANGA	PAL	06	A	2016-10-14 11:41:16.627838-05	\N
-0609	PENIPE	PEN	06	A	2016-10-14 11:41:16.627838-05	\N
-0610	CUMANDÁ	CUM	06	A	2016-10-14 11:41:16.627838-05	\N
-0701	MACHALA	MAC	07	A	2016-10-14 11:41:16.627838-05	\N
-0702	ARENILLAS	ARE	07	A	2016-10-14 11:41:16.627838-05	\N
-0703	ATAHUALPA	ATA	07	A	2016-10-14 11:41:16.627838-05	\N
-0704	BALSAS	BAL	07	A	2016-10-14 11:41:16.627838-05	\N
-0705	CHILLA	CHI	07	A	2016-10-14 11:41:16.627838-05	\N
-0706	EL GUABO	EL 	07	A	2016-10-14 11:41:16.627838-05	\N
-0707	HUAQUILLAS	HUA	07	A	2016-10-14 11:41:16.627838-05	\N
-0708	MARCABELÍ	MAR	07	A	2016-10-14 11:41:16.627838-05	\N
-0709	PASAJE	PAS	07	A	2016-10-14 11:41:16.627838-05	\N
-0710	PIÑAS	PIÑ	07	A	2016-10-14 11:41:16.627838-05	\N
-0711	PORTOVELO	POR	07	A	2016-10-14 11:41:16.627838-05	\N
-0712	SANTA ROSA	SAN	07	A	2016-10-14 11:41:16.627838-05	\N
-0713	ZARUMA	ZAR	07	A	2016-10-14 11:41:16.627838-05	\N
-0714	LAS LAJAS	LAS	07	A	2016-10-14 11:41:16.627838-05	\N
-0801	ESMERALDAS	ESM	08	A	2016-10-14 11:41:16.627838-05	\N
-0802	ELOY ALFARO	ELO	08	A	2016-10-14 11:41:16.627838-05	\N
-0803	MUISNE	MUI	08	A	2016-10-14 11:41:16.627838-05	\N
-0804	QUININDÉ	QUI	08	A	2016-10-14 11:41:16.627838-05	\N
-0805	SAN LORENZO	SAN	08	A	2016-10-14 11:41:16.627838-05	\N
-0806	ATACAMES	ATA	08	A	2016-10-14 11:41:16.627838-05	\N
-0807	RIOVERDE	RIO	08	A	2016-10-14 11:41:16.627838-05	\N
-0808	LA CONCORDIA	LA 	08	A	2016-10-14 11:41:16.627838-05	\N
-0901	GUAYAQUIL	GUA	09	A	2016-10-14 11:41:16.627838-05	\N
-0902	ALFREDO BAQUERIZO MORENO (JUJÁN)	ALF	09	A	2016-10-14 11:41:16.627838-05	\N
-0903	BALAO	BAL	09	A	2016-10-14 11:41:16.627838-05	\N
-0904	BALZAR	BAL	09	A	2016-10-14 11:41:16.627838-05	\N
-0905	COLIMES	COL	09	A	2016-10-14 11:41:16.627838-05	\N
-0906	DAULE	DAU	09	A	2016-10-14 11:41:16.627838-05	\N
-0907	DURÁN	DUR	09	A	2016-10-14 11:41:16.627838-05	\N
-0908	EL EMPALME	EL 	09	A	2016-10-14 11:41:16.627838-05	\N
-0909	EL TRIUNFO	EL 	09	A	2016-10-14 11:41:16.627838-05	\N
-0910	MILAGRO	MIL	09	A	2016-10-14 11:41:16.627838-05	\N
-0911	NARANJAL	NAR	09	A	2016-10-14 11:41:16.627838-05	\N
-0912	NARANJITO	NAR	09	A	2016-10-14 11:41:16.627838-05	\N
-0913	PALESTINA	PAL	09	A	2016-10-14 11:41:16.627838-05	\N
-0914	PEDRO CARBO	PED	09	A	2016-10-14 11:41:16.627838-05	\N
-0916	SAMBORONDÓN	SAM	09	A	2016-10-14 11:41:16.627838-05	\N
-0918	SANTA LUCÍA	SAN	09	A	2016-10-14 11:41:16.627838-05	\N
-0919	SALITRE (URBINA JADO)	SAL	09	A	2016-10-14 11:41:16.627838-05	\N
-0920	SAN JACINTO DE YAGUACHI	SAN	09	A	2016-10-14 11:41:16.627838-05	\N
-0921	PLAYAS	PLA	09	A	2016-10-14 11:41:16.627838-05	\N
-0922	SIMÓN BOLÍVAR	SIM	09	A	2016-10-14 11:41:16.627838-05	\N
-0923	CORONEL MARCELINO MARIDUEÑA	COR	09	A	2016-10-14 11:41:16.627838-05	\N
-0924	LOMAS DE SARGENTILLO	LOM	09	A	2016-10-14 11:41:16.627838-05	\N
-0925	NOBOL	NOB	09	A	2016-10-14 11:41:16.627838-05	\N
-0927	GENERAL ANTONIO ELIZALDE	GEN	09	A	2016-10-14 11:41:16.627838-05	\N
-0928	ISIDRO AYORA	ISI	09	A	2016-10-14 11:41:16.627838-05	\N
-1101	LOJA	LOJ	11	A	2016-10-14 11:41:16.627838-05	\N
-1102	CALVAS	CAL	11	A	2016-10-14 11:41:16.627838-05	\N
-1103	CATAMAYO	CAT	11	A	2016-10-14 11:41:16.627838-05	\N
-1104	CELICA	CEL	11	A	2016-10-14 11:41:16.627838-05	\N
-1105	CHAGUARPAMBA	CHA	11	A	2016-10-14 11:41:16.627838-05	\N
-1106	ESPÍNDOLA	ESP	11	A	2016-10-14 11:41:16.627838-05	\N
-1107	GONZANAMÁ	GON	11	A	2016-10-14 11:41:16.627838-05	\N
-1108	MACARÁ	MAC	11	A	2016-10-14 11:41:16.627838-05	\N
-1109	PALTAS	PAL	11	A	2016-10-14 11:41:16.627838-05	\N
-1110	PUYANGO	PUY	11	A	2016-10-14 11:41:16.627838-05	\N
-1111	SARAGURO	SAR	11	A	2016-10-14 11:41:16.627838-05	\N
-1112	SOZORANGA	SOZ	11	A	2016-10-14 11:41:16.627838-05	\N
-1113	ZAPOTILLO	ZAP	11	A	2016-10-14 11:41:16.627838-05	\N
-1114	PINDAL	PIN	11	A	2016-10-14 11:41:16.627838-05	\N
-1115	QUILANGA	QUI	11	A	2016-10-14 11:41:16.627838-05	\N
-1116	OLMEDO	OLM	11	A	2016-10-14 11:41:16.627838-05	\N
-1201	BABAHOYO	BAB	12	A	2016-10-14 11:41:16.627838-05	\N
-1202	BABA	BAB	12	A	2016-10-14 11:41:16.627838-05	\N
-1203	MONTALVO	MON	12	A	2016-10-14 11:41:16.627838-05	\N
-1204	PUEBLOVIEJO	PUE	12	A	2016-10-14 11:41:16.627838-05	\N
-1205	QUEVEDO	QUE	12	A	2016-10-14 11:41:16.627838-05	\N
-1206	URDANETA	URD	12	A	2016-10-14 11:41:16.627838-05	\N
-1207	VENTANAS	VEN	12	A	2016-10-14 11:41:16.627838-05	\N
-1208	VÍNCES	VÍN	12	A	2016-10-14 11:41:16.627838-05	\N
-1209	PALENQUE	PAL	12	A	2016-10-14 11:41:16.627838-05	\N
-1210	BUENA FÉ	BUE	12	A	2016-10-14 11:41:16.627838-05	\N
-1211	VALENCIA	VAL	12	A	2016-10-14 11:41:16.627838-05	\N
-1212	MOCACHE	MOC	12	A	2016-10-14 11:41:16.627838-05	\N
-1213	QUINSALOMA	QUI	12	A	2016-10-14 11:41:16.627838-05	\N
-1301	PORTOVIEJO	POR	13	A	2016-10-14 11:41:16.627838-05	\N
-1302	BOLÍVAR	BOL	13	A	2016-10-14 11:41:16.627838-05	\N
-1303	CHONE	CHO	13	A	2016-10-14 11:41:16.627838-05	\N
-1304	EL CARMEN	EL 	13	A	2016-10-14 11:41:16.627838-05	\N
-1305	FLAVIO ALFARO	FLA	13	A	2016-10-14 11:41:16.627838-05	\N
-1306	JIPIJAPA	JIP	13	A	2016-10-14 11:41:16.627838-05	\N
-1307	JUNÍN	JUN	13	A	2016-10-14 11:41:16.627838-05	\N
-1308	MANTA	MAN	13	A	2016-10-14 11:41:16.627838-05	\N
-1309	MONTECRISTI	MON	13	A	2016-10-14 11:41:16.627838-05	\N
-1310	PAJÁN	PAJ	13	A	2016-10-14 11:41:16.627838-05	\N
-1311	PICHINCHA	PIC	13	A	2016-10-14 11:41:16.627838-05	\N
-1312	ROCAFUERTE	ROC	13	A	2016-10-14 11:41:16.627838-05	\N
-1313	SANTA ANA	SAN	13	A	2016-10-14 11:41:16.627838-05	\N
-1314	SUCRE	SUC	13	A	2016-10-14 11:41:16.627838-05	\N
-1315	TOSAGUA	TOS	13	A	2016-10-14 11:41:16.627838-05	\N
-1316	24 DE MAYO	24 	13	A	2016-10-14 11:41:16.627838-05	\N
-1317	PEDERNALES	PED	13	A	2016-10-14 11:41:16.627838-05	\N
-1318	OLMEDO	OLM	13	A	2016-10-14 11:41:16.627838-05	\N
-1319	PUERTO LÓPEZ	PUE	13	A	2016-10-14 11:41:16.627838-05	\N
-1320	JAMA	JAM	13	A	2016-10-14 11:41:16.627838-05	\N
-1321	JARAMIJÓ	JAR	13	A	2016-10-14 11:41:16.627838-05	\N
-1322	SAN VICENTE	SAN	13	A	2016-10-14 11:41:16.627838-05	\N
-1401	MORONA	MOR	14	A	2016-10-14 11:41:16.627838-05	\N
-1402	GUALAQUIZA	GUA	14	A	2016-10-14 11:41:16.627838-05	\N
-1403	LIMÓN INDANZA	LIM	14	A	2016-10-14 11:41:16.627838-05	\N
-1404	PALORA	PAL	14	A	2016-10-14 11:41:16.627838-05	\N
-1405	SANTIAGO	SAN	14	A	2016-10-14 11:41:16.627838-05	\N
-1406	SUCÚA	SUC	14	A	2016-10-14 11:41:16.627838-05	\N
-1407	HUAMBOYA	HUA	14	A	2016-10-14 11:41:16.627838-05	\N
-1408	SAN JUAN BOSCO	SAN	14	A	2016-10-14 11:41:16.627838-05	\N
-1409	TAISHA	TAI	14	A	2016-10-14 11:41:16.627838-05	\N
-1410	LOGROÑO	LOG	14	A	2016-10-14 11:41:16.627838-05	\N
-1411	PABLO SEXTO	PAB	14	A	2016-10-14 11:41:16.627838-05	\N
-1412	TIWINTZA	TIW	14	A	2016-10-14 11:41:16.627838-05	\N
-1501	TENA	TEN	15	A	2016-10-14 11:41:16.627838-05	\N
-1503	ARCHIDONA	ARC	15	A	2016-10-14 11:41:16.627838-05	\N
-1504	EL CHACO	EL 	15	A	2016-10-14 11:41:16.627838-05	\N
-1507	QUIJOS	QUI	15	A	2016-10-14 11:41:16.627838-05	\N
-1509	CARLOS JULIO AROSEMENA TOLA	CAR	15	A	2016-10-14 11:41:16.627838-05	\N
-1601	PASTAZA	PAS	16	A	2016-10-14 11:41:16.627838-05	\N
-1602	MERA	MER	16	A	2016-10-14 11:41:16.627838-05	\N
-1603	SANTA CLARA	SAN	16	A	2016-10-14 11:41:16.627838-05	\N
-1604	ARAJUNO	ARA	16	A	2016-10-14 11:41:16.627838-05	\N
-1701	QUITO	QUI	17	A	2016-10-14 11:41:16.627838-05	\N
-1702	CAYAMBE	CAY	17	A	2016-10-14 11:41:16.627838-05	\N
-1703	MEJIA	MEJ	17	A	2016-10-14 11:41:16.627838-05	\N
-1704	PEDRO MONCAYO	PED	17	A	2016-10-14 11:41:16.627838-05	\N
-1705	RUMIÑAHUI	RUM	17	A	2016-10-14 11:41:16.627838-05	\N
-1707	SAN MIGUEL DE LOS BANCOS	SAN	17	A	2016-10-14 11:41:16.627838-05	\N
-1708	PEDRO VICENTE MALDONADO	PED	17	A	2016-10-14 11:41:16.627838-05	\N
-1709	PUERTO QUITO	PUE	17	A	2016-10-14 11:41:16.627838-05	\N
-1801	AMBATO	AMB	18	A	2016-10-14 11:41:16.627838-05	\N
-1802	BAÑOS DE AGUA SANTA	BAÑ	18	A	2016-10-14 11:41:16.627838-05	\N
-1803	CEVALLOS	CEV	18	A	2016-10-14 11:41:16.627838-05	\N
-1804	MOCHA	MOC	18	A	2016-10-14 11:41:16.627838-05	\N
-1805	PATATE	PAT	18	A	2016-10-14 11:41:16.627838-05	\N
-1806	QUERO	QUE	18	A	2016-10-14 11:41:16.627838-05	\N
-1807	SAN PEDRO DE PELILEO	SAN	18	A	2016-10-14 11:41:16.627838-05	\N
-1808	SANTIAGO DE PÍLLARO	SAN	18	A	2016-10-14 11:41:16.627838-05	\N
-1809	TISALEO	TIS	18	A	2016-10-14 11:41:16.627838-05	\N
-1901	ZAMORA	ZAM	19	A	2016-10-14 11:41:16.627838-05	\N
-1902	CHINCHIPE	CHI	19	A	2016-10-14 11:41:16.627838-05	\N
-1903	NANGARITZA	NAN	19	A	2016-10-14 11:41:16.627838-05	\N
-1904	YACUAMBI	YAC	19	A	2016-10-14 11:41:16.627838-05	\N
-1905	YANTZAZA (YANZATZA)	YAN	19	A	2016-10-14 11:41:16.627838-05	\N
-1906	EL PANGUI	EL 	19	A	2016-10-14 11:41:16.627838-05	\N
-1907	CENTINELA DEL CÓNDOR	CEN	19	A	2016-10-14 11:41:16.627838-05	\N
-1908	PALANDA	PAL	19	A	2016-10-14 11:41:16.627838-05	\N
-1909	PAQUISHA	PAQ	19	A	2016-10-14 11:41:16.627838-05	\N
-2001	SAN CRISTÓBAL	SAN	20	A	2016-10-14 11:41:16.627838-05	\N
-2002	ISABELA	ISA	20	A	2016-10-14 11:41:16.627838-05	\N
-2003	SANTA CRUZ	SAN	20	A	2016-10-14 11:41:16.627838-05	\N
-2101	LAGO AGRIO	LAG	21	A	2016-10-14 11:41:16.627838-05	\N
-2102	GONZALO PIZARRO	GON	21	A	2016-10-14 11:41:16.627838-05	\N
-2103	PUTUMAYO	PUT	21	A	2016-10-14 11:41:16.627838-05	\N
-2104	SHUSHUFINDI	SHU	21	A	2016-10-14 11:41:16.627838-05	\N
-2105	SUCUMBÍOS	SUC	21	A	2016-10-14 11:41:16.627838-05	\N
-2106	CASCALES	CAS	21	A	2016-10-14 11:41:16.627838-05	\N
-2107	CUYABENO	CUY	21	A	2016-10-14 11:41:16.627838-05	\N
-2201	ORELLANA	ORE	22	A	2016-10-14 11:41:16.627838-05	\N
-2202	AGUARICO	AGU	22	A	2016-10-14 11:41:16.627838-05	\N
-2203	LA JOYA DE LOS SACHAS	LA 	22	A	2016-10-14 11:41:16.627838-05	\N
-2204	LORETO	LOR	22	A	2016-10-14 11:41:16.627838-05	\N
-2301	SANTO DOMINGO	SAN	23	A	2016-10-14 11:41:16.627838-05	\N
-2401	SANTA ELENA	SAN	24	A	2016-10-14 11:41:16.627838-05	\N
-2402	LA LIBERTAD	LA 	24	A	2016-10-14 11:41:16.627838-05	\N
-2403	SALINAS	SAL	24	A	2016-10-14 11:41:16.627838-05	\N
-9001	LAS GOLONDRINAS	LAS	90	A	2016-10-14 11:41:16.627838-05	\N
-9003	MANGA DEL CURA	MAN	90	A	2016-10-14 11:41:16.627838-05	\N
-9004	EL PIEDRERO	EL 	90	A	2016-10-14 11:41:16.627838-05	\N
-010102	CAÑARIBAMBA	CAÑ	0101	A	2016-10-14 11:41:16.627838-05	\N
-010103	EL BATÁN	EL 	0101	A	2016-10-14 11:41:16.627838-05	\N
-010104	EL SAGRARIO	EL 	0101	A	2016-10-14 11:41:16.627838-05	\N
-010105	EL VECINO	EL 	0101	A	2016-10-14 11:41:16.627838-05	\N
-010106	GIL RAMÍREZ DÁVALOS	GIL	0101	A	2016-10-14 11:41:16.627838-05	\N
-010107	HUAYNACÁPAC	HUA	0101	A	2016-10-14 11:41:16.627838-05	\N
-010108	MACHÁNGARA	MAC	0101	A	2016-10-14 11:41:16.627838-05	\N
-010109	MONAY	MON	0101	A	2016-10-14 11:41:16.627838-05	\N
-010110	SAN BLAS	SAN	0101	A	2016-10-14 11:41:16.627838-05	\N
-010111	SAN SEBASTIÁN	SAN	0101	A	2016-10-14 11:41:16.627838-05	\N
-010112	SUCRE	SUC	0101	A	2016-10-14 11:41:16.627838-05	\N
-010113	TOTORACOCHA	TOT	0101	A	2016-10-14 11:41:16.627838-05	\N
-010114	YANUNCAY	YAN	0101	A	2016-10-14 11:41:16.627838-05	\N
-010115	HERMANO MIGUEL	HER	0101	A	2016-10-14 11:41:16.627838-05	\N
-010150	CUENCA	CUE	0101	A	2016-10-14 11:41:16.627838-05	\N
-010151	BAÑOS	BAÑ	0101	A	2016-10-14 11:41:16.627838-05	\N
-010152	CUMBE	CUM	0101	A	2016-10-14 11:41:16.627838-05	\N
-010153	CHAUCHA	CHA	0101	A	2016-10-14 11:41:16.627838-05	\N
-010154	CHECA (JIDCAY)	CHE	0101	A	2016-10-14 11:41:16.627838-05	\N
-010155	CHIQUINTAD	CHI	0101	A	2016-10-14 11:41:16.627838-05	\N
-010156	LLACAO	LLA	0101	A	2016-10-14 11:41:16.627838-05	\N
-010157	MOLLETURO	MOL	0101	A	2016-10-14 11:41:16.627838-05	\N
-010158	NULTI	NUL	0101	A	2016-10-14 11:41:16.627838-05	\N
-010159	OCTAVIO CORDERO PALACIOS (SANTA ROSA)	OCT	0101	A	2016-10-14 11:41:16.627838-05	\N
-010160	PACCHA	PAC	0101	A	2016-10-14 11:41:16.627838-05	\N
-010161	QUINGEO	QUI	0101	A	2016-10-14 11:41:16.627838-05	\N
-010162	RICAURTE	RIC	0101	A	2016-10-14 11:41:16.627838-05	\N
-010163	SAN JOAQUÍN	SAN	0101	A	2016-10-14 11:41:16.627838-05	\N
-010164	SANTA ANA	SAN	0101	A	2016-10-14 11:41:16.627838-05	\N
-010165	SAYAUSÍ	SAY	0101	A	2016-10-14 11:41:16.627838-05	\N
-010166	SIDCAY	SID	0101	A	2016-10-14 11:41:16.627838-05	\N
-010167	SININCAY	SIN	0101	A	2016-10-14 11:41:16.627838-05	\N
-010168	TARQUI	TAR	0101	A	2016-10-14 11:41:16.627838-05	\N
-010169	TURI	TUR	0101	A	2016-10-14 11:41:16.627838-05	\N
-010170	VALLE	VAL	0101	A	2016-10-14 11:41:16.627838-05	\N
-010171	VICTORIA DEL PORTETE (IRQUIS)	VIC	0101	A	2016-10-14 11:41:16.627838-05	\N
-010250	GIRÓN	GIR	0102	A	2016-10-14 11:41:16.627838-05	\N
-010251	ASUNCIÓN	ASU	0102	A	2016-10-14 11:41:16.627838-05	\N
-010252	SAN GERARDO	SAN	0102	A	2016-10-14 11:41:16.627838-05	\N
-010350	GUALACEO	GUA	0103	A	2016-10-14 11:41:16.627838-05	\N
-010351	CHORDELEG	CHO	0103	A	2016-10-14 11:41:16.627838-05	\N
-010352	DANIEL CÓRDOVA TORAL (EL ORIENTE)	DAN	0103	A	2016-10-14 11:41:16.627838-05	\N
-010353	JADÁN	JAD	0103	A	2016-10-14 11:41:16.627838-05	\N
-010354	MARIANO MORENO	MAR	0103	A	2016-10-14 11:41:16.627838-05	\N
-010355	PRINCIPAL	PRI	0103	A	2016-10-14 11:41:16.627838-05	\N
-010356	REMIGIO CRESPO TORAL (GÚLAG)	REM	0103	A	2016-10-14 11:41:16.627838-05	\N
-010357	SAN JUAN	SAN	0103	A	2016-10-14 11:41:16.627838-05	\N
-010358	ZHIDMAD	ZHI	0103	A	2016-10-14 11:41:16.627838-05	\N
-010359	LUIS CORDERO VEGA	LUI	0103	A	2016-10-14 11:41:16.627838-05	\N
-010360	SIMÓN BOLÍVAR (CAB. EN GAÑANZOL)	SIM	0103	A	2016-10-14 11:41:16.627838-05	\N
-010450	NABÓN	NAB	0104	A	2016-10-14 11:41:16.627838-05	\N
-010451	COCHAPATA	COC	0104	A	2016-10-14 11:41:16.627838-05	\N
-010452	EL PROGRESO (CAB.EN ZHOTA)	EL 	0104	A	2016-10-14 11:41:16.627838-05	\N
-010453	LAS NIEVES (CHAYA)	LAS	0104	A	2016-10-14 11:41:16.627838-05	\N
-010454	OÑA	OÑA	0104	A	2016-10-14 11:41:16.627838-05	\N
-010550	PAUTE	PAU	0105	A	2016-10-14 11:41:16.627838-05	\N
-010551	AMALUZA	AMA	0105	A	2016-10-14 11:41:16.627838-05	\N
-010552	BULÁN (JOSÉ VÍCTOR IZQUIERDO)	BUL	0105	A	2016-10-14 11:41:16.627838-05	\N
-010553	CHICÁN (GUILLERMO ORTEGA)	CHI	0105	A	2016-10-14 11:41:16.627838-05	\N
-010554	EL CABO	EL 	0105	A	2016-10-14 11:41:16.627838-05	\N
-010555	GUACHAPALA	GUA	0105	A	2016-10-14 11:41:16.627838-05	\N
-010556	GUARAINAG	GUA	0105	A	2016-10-14 11:41:16.627838-05	\N
-010557	PALMAS	PAL	0105	A	2016-10-14 11:41:16.627838-05	\N
-010558	PAN	PAN	0105	A	2016-10-14 11:41:16.627838-05	\N
-010559	SAN CRISTÓBAL (CARLOS ORDÓÑEZ LAZO)	SAN	0105	A	2016-10-14 11:41:16.627838-05	\N
-010560	SEVILLA DE ORO	SEV	0105	A	2016-10-14 11:41:16.627838-05	\N
-010561	TOMEBAMBA	TOM	0105	A	2016-10-14 11:41:16.627838-05	\N
-010562	DUG DUG	DUG	0105	A	2016-10-14 11:41:16.627838-05	\N
-010650	PUCARÁ	PUC	0106	A	2016-10-14 11:41:16.627838-05	\N
-010651	CAMILO PONCE ENRÍQUEZ (CAB. EN RÍO 7 DE MOLLEPONGO)	CAM	0106	A	2016-10-14 11:41:16.627838-05	\N
-010652	SAN RAFAEL DE SHARUG	SAN	0106	A	2016-10-14 11:41:16.627838-05	\N
-010750	SAN FERNANDO	SAN	0107	A	2016-10-14 11:41:16.627838-05	\N
-010751	CHUMBLÍN	CHU	0107	A	2016-10-14 11:41:16.627838-05	\N
-010850	SANTA ISABEL (CHAGUARURCO)	SAN	0108	A	2016-10-14 11:41:16.627838-05	\N
-010851	ABDÓN CALDERÓN (LA UNIÓN)	ABD	0108	A	2016-10-14 11:41:16.627838-05	\N
-010852	EL CARMEN DE PIJILÍ	EL 	0108	A	2016-10-14 11:41:16.627838-05	\N
-010853	ZHAGLLI (SHAGLLI)	ZHA	0108	A	2016-10-14 11:41:16.627838-05	\N
-010854	SAN SALVADOR DE CAÑARIBAMBA	SAN	0108	A	2016-10-14 11:41:16.627838-05	\N
-010950	SIGSIG	SIG	0109	A	2016-10-14 11:41:16.627838-05	\N
-010951	CUCHIL (CUTCHIL)	CUC	0109	A	2016-10-14 11:41:16.627838-05	\N
-010952	GIMA	GIM	0109	A	2016-10-14 11:41:16.627838-05	\N
-010953	GUEL	GUE	0109	A	2016-10-14 11:41:16.627838-05	\N
-010954	LUDO	LUD	0109	A	2016-10-14 11:41:16.627838-05	\N
-010955	SAN BARTOLOMÉ	SAN	0109	A	2016-10-14 11:41:16.627838-05	\N
-010956	SAN JOSÉ DE RARANGA	SAN	0109	A	2016-10-14 11:41:16.627838-05	\N
-011050	SAN FELIPE DE OÑA CABECERA CANTONAL	SAN	0110	A	2016-10-14 11:41:16.627838-05	\N
-011051	SUSUDEL	SUS	0110	A	2016-10-14 11:41:16.627838-05	\N
-011150	CHORDELEG	CHO	0111	A	2016-10-14 11:41:16.627838-05	\N
-011151	PRINCIPAL	PRI	0111	A	2016-10-14 11:41:16.627838-05	\N
-011152	LA UNIÓN	LA 	0111	A	2016-10-14 11:41:16.627838-05	\N
-011153	LUIS GALARZA ORELLANA (CAB.EN DELEGSOL)	LUI	0111	A	2016-10-14 11:41:16.627838-05	\N
-011154	SAN MARTÍN DE PUZHIO	SAN	0111	A	2016-10-14 11:41:16.627838-05	\N
-011250	EL PAN	EL 	0112	A	2016-10-14 11:41:16.627838-05	\N
-011251	AMALUZA	AMA	0112	A	2016-10-14 11:41:16.627838-05	\N
-011252	PALMAS	PAL	0112	A	2016-10-14 11:41:16.627838-05	\N
-011253	SAN VICENTE	SAN	0112	A	2016-10-14 11:41:16.627838-05	\N
-011350	SEVILLA DE ORO	SEV	0113	A	2016-10-14 11:41:16.627838-05	\N
-011351	AMALUZA	AMA	0113	A	2016-10-14 11:41:16.627838-05	\N
-011352	PALMAS	PAL	0113	A	2016-10-14 11:41:16.627838-05	\N
-011450	GUACHAPALA	GUA	0114	A	2016-10-14 11:41:16.627838-05	\N
-011550	CAMILO PONCE ENRÍQUEZ	CAM	0115	A	2016-10-14 11:41:16.627838-05	\N
-011551	EL CARMEN DE PIJILÍ	EL 	0115	A	2016-10-14 11:41:16.627838-05	\N
-020101	ÁNGEL POLIBIO CHÁVES	ÁNG	0201	A	2016-10-14 11:41:16.627838-05	\N
-020102	GABRIEL IGNACIO VEINTIMILLA	GAB	0201	A	2016-10-14 11:41:16.627838-05	\N
-020103	GUANUJO	GUA	0201	A	2016-10-14 11:41:16.627838-05	\N
-020150	GUARANDA	GUA	0201	A	2016-10-14 11:41:16.627838-05	\N
-020151	FACUNDO VELA	FAC	0201	A	2016-10-14 11:41:16.627838-05	\N
-020152	GUANUJO	GUA	0201	A	2016-10-14 11:41:16.627838-05	\N
-020153	JULIO E. MORENO (CATANAHUÁN GRANDE)	JUL	0201	A	2016-10-14 11:41:16.627838-05	\N
-020154	LAS NAVES	LAS	0201	A	2016-10-14 11:41:16.627838-05	\N
-020155	SALINAS	SAL	0201	A	2016-10-14 11:41:16.627838-05	\N
-020156	SAN LORENZO	SAN	0201	A	2016-10-14 11:41:16.627838-05	\N
-020157	SAN SIMÓN (YACOTO)	SAN	0201	A	2016-10-14 11:41:16.627838-05	\N
-020158	SANTA FÉ (SANTA FÉ)	SAN	0201	A	2016-10-14 11:41:16.627838-05	\N
-020159	SIMIÁTUG	SIM	0201	A	2016-10-14 11:41:16.627838-05	\N
-020160	SAN LUIS DE PAMBIL	SAN	0201	A	2016-10-14 11:41:16.627838-05	\N
-020250	CHILLANES	CHI	0202	A	2016-10-14 11:41:16.627838-05	\N
-020251	SAN JOSÉ DEL TAMBO (TAMBOPAMBA)	SAN	0202	A	2016-10-14 11:41:16.627838-05	\N
-020350	SAN JOSÉ DE CHIMBO	SAN	0203	A	2016-10-14 11:41:16.627838-05	\N
-020351	ASUNCIÓN (ASANCOTO)	ASU	0203	A	2016-10-14 11:41:16.627838-05	\N
-020352	CALUMA	CAL	0203	A	2016-10-14 11:41:16.627838-05	\N
-020353	MAGDALENA (CHAPACOTO)	MAG	0203	A	2016-10-14 11:41:16.627838-05	\N
-020354	SAN SEBASTIÁN	SAN	0203	A	2016-10-14 11:41:16.627838-05	\N
-020355	TELIMBELA	TEL	0203	A	2016-10-14 11:41:16.627838-05	\N
-020450	ECHEANDÍA	ECH	0204	A	2016-10-14 11:41:16.627838-05	\N
-020550	SAN MIGUEL	SAN	0205	A	2016-10-14 11:41:16.627838-05	\N
-020551	BALSAPAMBA	BAL	0205	A	2016-10-14 11:41:16.627838-05	\N
-020552	BILOVÁN	BIL	0205	A	2016-10-14 11:41:16.627838-05	\N
-020553	RÉGULO DE MORA	RÉG	0205	A	2016-10-14 11:41:16.627838-05	\N
-020554	SAN PABLO (SAN PABLO DE ATENAS)	SAN	0205	A	2016-10-14 11:41:16.627838-05	\N
-020555	SANTIAGO	SAN	0205	A	2016-10-14 11:41:16.627838-05	\N
-020556	SAN VICENTE	SAN	0205	A	2016-10-14 11:41:16.627838-05	\N
-020650	CALUMA	CAL	0206	A	2016-10-14 11:41:16.627838-05	\N
-020701	LAS MERCEDES	LAS	0207	A	2016-10-14 11:41:16.627838-05	\N
-020702	LAS NAVES	LAS	0207	A	2016-10-14 11:41:16.627838-05	\N
-020750	LAS NAVES	LAS	0207	A	2016-10-14 11:41:16.627838-05	\N
-030101	AURELIO BAYAS MARTÍNEZ	AUR	0301	A	2016-10-14 11:41:16.627838-05	\N
-030102	AZOGUES	AZO	0301	A	2016-10-14 11:41:16.627838-05	\N
-030103	BORRERO	BOR	0301	A	2016-10-14 11:41:16.627838-05	\N
-030104	SAN FRANCISCO	SAN	0301	A	2016-10-14 11:41:16.627838-05	\N
-030150	AZOGUES	AZO	0301	A	2016-10-14 11:41:16.627838-05	\N
-030151	COJITAMBO	COJ	0301	A	2016-10-14 11:41:16.627838-05	\N
-030152	DÉLEG	DÉL	0301	A	2016-10-14 11:41:16.627838-05	\N
-030153	GUAPÁN	GUA	0301	A	2016-10-14 11:41:16.627838-05	\N
-030154	JAVIER LOYOLA (CHUQUIPATA)	JAV	0301	A	2016-10-14 11:41:16.627838-05	\N
-030155	LUIS CORDERO	LUI	0301	A	2016-10-14 11:41:16.627838-05	\N
-030156	PINDILIG	PIN	0301	A	2016-10-14 11:41:16.627838-05	\N
-030157	RIVERA	RIV	0301	A	2016-10-14 11:41:16.627838-05	\N
-030158	SAN MIGUEL	SAN	0301	A	2016-10-14 11:41:16.627838-05	\N
-030159	SOLANO	SOL	0301	A	2016-10-14 11:41:16.627838-05	\N
-030160	TADAY	TAD	0301	A	2016-10-14 11:41:16.627838-05	\N
-030250	BIBLIÁN	BIB	0302	A	2016-10-14 11:41:16.627838-05	\N
-030251	NAZÓN (CAB. EN PAMPA DE DOMÍNGUEZ)	NAZ	0302	A	2016-10-14 11:41:16.627838-05	\N
-030252	SAN FRANCISCO DE SAGEO	SAN	0302	A	2016-10-14 11:41:16.627838-05	\N
-030253	TURUPAMBA	TUR	0302	A	2016-10-14 11:41:16.627838-05	\N
-030254	JERUSALÉN	JER	0302	A	2016-10-14 11:41:16.627838-05	\N
-030350	CAÑAR	CAÑ	0303	A	2016-10-14 11:41:16.627838-05	\N
-030351	CHONTAMARCA	CHO	0303	A	2016-10-14 11:41:16.627838-05	\N
-030352	CHOROCOPTE	CHO	0303	A	2016-10-14 11:41:16.627838-05	\N
-030353	GENERAL MORALES (SOCARTE)	GEN	0303	A	2016-10-14 11:41:16.627838-05	\N
-030354	GUALLETURO	GUA	0303	A	2016-10-14 11:41:16.627838-05	\N
-030355	HONORATO VÁSQUEZ (TAMBO VIEJO)	HON	0303	A	2016-10-14 11:41:16.627838-05	\N
-030356	INGAPIRCA	ING	0303	A	2016-10-14 11:41:16.627838-05	\N
-030357	JUNCAL	JUN	0303	A	2016-10-14 11:41:16.627838-05	\N
-030358	SAN ANTONIO	SAN	0303	A	2016-10-14 11:41:16.627838-05	\N
-030359	SUSCAL	SUS	0303	A	2016-10-14 11:41:16.627838-05	\N
-030360	TAMBO	TAM	0303	A	2016-10-14 11:41:16.627838-05	\N
-030361	ZHUD	ZHU	0303	A	2016-10-14 11:41:16.627838-05	\N
-030362	VENTURA	VEN	0303	A	2016-10-14 11:41:16.627838-05	\N
-030363	DUCUR	DUC	0303	A	2016-10-14 11:41:16.627838-05	\N
-030450	LA TRONCAL	LA 	0304	A	2016-10-14 11:41:16.627838-05	\N
-030451	MANUEL J. CALLE	MAN	0304	A	2016-10-14 11:41:16.627838-05	\N
-030452	PANCHO NEGRO	PAN	0304	A	2016-10-14 11:41:16.627838-05	\N
-030550	EL TAMBO	EL 	0305	A	2016-10-14 11:41:16.627838-05	\N
-030650	DÉLEG	DÉL	0306	A	2016-10-14 11:41:16.627838-05	\N
-030651	SOLANO	SOL	0306	A	2016-10-14 11:41:16.627838-05	\N
-030750	SUSCAL	SUS	0307	A	2016-10-14 11:41:16.627838-05	\N
-040101	GONZÁLEZ SUÁREZ	GON	0401	A	2016-10-14 11:41:16.627838-05	\N
-040102	TULCÁN	TUL	0401	A	2016-10-14 11:41:16.627838-05	\N
-040150	TULCÁN	TUL	0401	A	2016-10-14 11:41:16.627838-05	\N
-040151	EL CARMELO (EL PUN)	EL 	0401	A	2016-10-14 11:41:16.627838-05	\N
-040152	HUACA	HUA	0401	A	2016-10-14 11:41:16.627838-05	\N
-040153	JULIO ANDRADE (OREJUELA)	JUL	0401	A	2016-10-14 11:41:16.627838-05	\N
-040154	MALDONADO	MAL	0401	A	2016-10-14 11:41:16.627838-05	\N
-040155	PIOTER	PIO	0401	A	2016-10-14 11:41:16.627838-05	\N
-040156	TOBAR DONOSO (LA BOCANA DE CAMUMBÍ)	TOB	0401	A	2016-10-14 11:41:16.627838-05	\N
-040157	TUFIÑO	TUF	0401	A	2016-10-14 11:41:16.627838-05	\N
-040158	URBINA (TAYA)	URB	0401	A	2016-10-14 11:41:16.627838-05	\N
-040159	EL CHICAL	EL 	0401	A	2016-10-14 11:41:16.627838-05	\N
-040160	MARISCAL SUCRE	MAR	0401	A	2016-10-14 11:41:16.627838-05	\N
-040161	SANTA MARTHA DE CUBA	SAN	0401	A	2016-10-14 11:41:16.627838-05	\N
-040250	BOLÍVAR	BOL	0402	A	2016-10-14 11:41:16.627838-05	\N
-040251	GARCÍA MORENO	GAR	0402	A	2016-10-14 11:41:16.627838-05	\N
-040252	LOS ANDES	LOS	0402	A	2016-10-14 11:41:16.627838-05	\N
-040253	MONTE OLIVO	MON	0402	A	2016-10-14 11:41:16.627838-05	\N
-040254	SAN VICENTE DE PUSIR	SAN	0402	A	2016-10-14 11:41:16.627838-05	\N
-040255	SAN RAFAEL	SAN	0402	A	2016-10-14 11:41:16.627838-05	\N
-040301	EL ÁNGEL	EL 	0403	A	2016-10-14 11:41:16.627838-05	\N
-040302	27 DE SEPTIEMBRE	27 	0403	A	2016-10-14 11:41:16.627838-05	\N
-040350	EL ANGEL	EL 	0403	A	2016-10-14 11:41:16.627838-05	\N
-040351	EL GOALTAL	EL 	0403	A	2016-10-14 11:41:16.627838-05	\N
-040352	LA LIBERTAD (ALIZO)	LA 	0403	A	2016-10-14 11:41:16.627838-05	\N
-040353	SAN ISIDRO	SAN	0403	A	2016-10-14 11:41:16.627838-05	\N
-040450	MIRA (CHONTAHUASI)	MIR	0404	A	2016-10-14 11:41:16.627838-05	\N
-040451	CONCEPCIÓN	CON	0404	A	2016-10-14 11:41:16.627838-05	\N
-040452	JIJÓN Y CAAMAÑO (CAB. EN RÍO BLANCO)	JIJ	0404	A	2016-10-14 11:41:16.627838-05	\N
-040453	JUAN MONTALVO (SAN IGNACIO DE QUIL)	JUA	0404	A	2016-10-14 11:41:16.627838-05	\N
-040501	GONZÁLEZ SUÁREZ	GON	0405	A	2016-10-14 11:41:16.627838-05	\N
-040502	SAN JOSÉ	SAN	0405	A	2016-10-14 11:41:16.627838-05	\N
-040550	SAN GABRIEL	SAN	0405	A	2016-10-14 11:41:16.627838-05	\N
-040551	CRISTÓBAL COLÓN	CRI	0405	A	2016-10-14 11:41:16.627838-05	\N
-040552	CHITÁN DE NAVARRETE	CHI	0405	A	2016-10-14 11:41:16.627838-05	\N
-040553	FERNÁNDEZ SALVADOR	FER	0405	A	2016-10-14 11:41:16.627838-05	\N
-040554	LA PAZ	LA 	0405	A	2016-10-14 11:41:16.627838-05	\N
-040555	PIARTAL	PIA	0405	A	2016-10-14 11:41:16.627838-05	\N
-040650	HUACA	HUA	0406	A	2016-10-14 11:41:16.627838-05	\N
-040651	MARISCAL SUCRE	MAR	0406	A	2016-10-14 11:41:16.627838-05	\N
-050101	ELOY ALFARO (SAN FELIPE)	ELO	0501	A	2016-10-14 11:41:16.627838-05	\N
-050102	IGNACIO FLORES (PARQUE FLORES)	IGN	0501	A	2016-10-14 11:41:16.627838-05	\N
-050103	JUAN MONTALVO (SAN SEBASTIÁN)	JUA	0501	A	2016-10-14 11:41:16.627838-05	\N
-050104	LA MATRIZ	LA 	0501	A	2016-10-14 11:41:16.627838-05	\N
-050105	SAN BUENAVENTURA	SAN	0501	A	2016-10-14 11:41:16.627838-05	\N
-050150	LATACUNGA	LAT	0501	A	2016-10-14 11:41:16.627838-05	\N
-050151	ALAQUES (ALÁQUEZ)	ALA	0501	A	2016-10-14 11:41:16.627838-05	\N
-050152	BELISARIO QUEVEDO (GUANAILÍN)	BEL	0501	A	2016-10-14 11:41:16.627838-05	\N
-050153	GUAITACAMA (GUAYTACAMA)	GUA	0501	A	2016-10-14 11:41:16.627838-05	\N
-050154	JOSEGUANGO BAJO	JOS	0501	A	2016-10-14 11:41:16.627838-05	\N
-050155	LAS PAMPAS	LAS	0501	A	2016-10-14 11:41:16.627838-05	\N
-050156	MULALÓ	MUL	0501	A	2016-10-14 11:41:16.627838-05	\N
-050157	11 DE NOVIEMBRE (ILINCHISI)	11 	0501	A	2016-10-14 11:41:16.627838-05	\N
-050158	POALÓ	POA	0501	A	2016-10-14 11:41:16.627838-05	\N
-050159	SAN JUAN DE PASTOCALLE	SAN	0501	A	2016-10-14 11:41:16.627838-05	\N
-050160	SIGCHOS	SIG	0501	A	2016-10-14 11:41:16.627838-05	\N
-050161	TANICUCHÍ	TAN	0501	A	2016-10-14 11:41:16.627838-05	\N
-050162	TOACASO	TOA	0501	A	2016-10-14 11:41:16.627838-05	\N
-050163	PALO QUEMADO	PAL	0501	A	2016-10-14 11:41:16.627838-05	\N
-050201	EL CARMEN	EL 	0502	A	2016-10-14 11:41:16.627838-05	\N
-050202	LA MANÁ	LA 	0502	A	2016-10-14 11:41:16.627838-05	\N
-050203	EL TRIUNFO	EL 	0502	A	2016-10-14 11:41:16.627838-05	\N
-050250	LA MANÁ	LA 	0502	A	2016-10-14 11:41:16.627838-05	\N
-050251	GUASAGANDA (CAB.EN GUASAGANDA	GUA	0502	A	2016-10-14 11:41:16.627838-05	\N
-050252	PUCAYACU	PUC	0502	A	2016-10-14 11:41:16.627838-05	\N
-050350	EL CORAZÓN	EL 	0503	A	2016-10-14 11:41:16.627838-05	\N
-050351	MORASPUNGO	MOR	0503	A	2016-10-14 11:41:16.627838-05	\N
-050352	PINLLOPATA	PIN	0503	A	2016-10-14 11:41:16.627838-05	\N
-050353	RAMÓN CAMPAÑA	RAM	0503	A	2016-10-14 11:41:16.627838-05	\N
-050450	PUJILÍ	PUJ	0504	A	2016-10-14 11:41:16.627838-05	\N
-050451	ANGAMARCA	ANG	0504	A	2016-10-14 11:41:16.627838-05	\N
-050452	CHUCCHILÁN (CHUGCHILÁN)	CHU	0504	A	2016-10-14 11:41:16.627838-05	\N
-050453	GUANGAJE	GUA	0504	A	2016-10-14 11:41:16.627838-05	\N
-050454	ISINLIBÍ (ISINLIVÍ)	ISI	0504	A	2016-10-14 11:41:16.627838-05	\N
-050455	LA VICTORIA	LA 	0504	A	2016-10-14 11:41:16.627838-05	\N
-050456	PILALÓ	PIL	0504	A	2016-10-14 11:41:16.627838-05	\N
-050457	TINGO	TIN	0504	A	2016-10-14 11:41:16.627838-05	\N
-050458	ZUMBAHUA	ZUM	0504	A	2016-10-14 11:41:16.627838-05	\N
-050550	SAN MIGUEL	SAN	0505	A	2016-10-14 11:41:16.627838-05	\N
-050551	ANTONIO JOSÉ HOLGUÍN (SANTA LUCÍA)	ANT	0505	A	2016-10-14 11:41:16.627838-05	\N
-050552	CUSUBAMBA	CUS	0505	A	2016-10-14 11:41:16.627838-05	\N
-050553	MULALILLO	MUL	0505	A	2016-10-14 11:41:16.627838-05	\N
-050554	MULLIQUINDIL (SANTA ANA)	MUL	0505	A	2016-10-14 11:41:16.627838-05	\N
-050555	PANSALEO	PAN	0505	A	2016-10-14 11:41:16.627838-05	\N
-050650	SAQUISILÍ	SAQ	0506	A	2016-10-14 11:41:16.627838-05	\N
-050651	CANCHAGUA	CAN	0506	A	2016-10-14 11:41:16.627838-05	\N
-050652	CHANTILÍN	CHA	0506	A	2016-10-14 11:41:16.627838-05	\N
-050653	COCHAPAMBA	COC	0506	A	2016-10-14 11:41:16.627838-05	\N
-050750	SIGCHOS	SIG	0507	A	2016-10-14 11:41:16.627838-05	\N
-050751	CHUGCHILLÁN	CHU	0507	A	2016-10-14 11:41:16.627838-05	\N
-050752	ISINLIVÍ	ISI	0507	A	2016-10-14 11:41:16.627838-05	\N
-050753	LAS PAMPAS	LAS	0507	A	2016-10-14 11:41:16.627838-05	\N
-050754	PALO QUEMADO	PAL	0507	A	2016-10-14 11:41:16.627838-05	\N
-060101	LIZARZABURU	LIZ	0601	A	2016-10-14 11:41:16.627838-05	\N
-060102	MALDONADO	MAL	0601	A	2016-10-14 11:41:16.627838-05	\N
-060103	VELASCO	VEL	0601	A	2016-10-14 11:41:16.627838-05	\N
-060104	VELOZ	VEL	0601	A	2016-10-14 11:41:16.627838-05	\N
-060105	YARUQUÍES	YAR	0601	A	2016-10-14 11:41:16.627838-05	\N
-060150	RIOBAMBA	RIO	0601	A	2016-10-14 11:41:16.627838-05	\N
-060151	CACHA (CAB. EN MACHÁNGARA)	CAC	0601	A	2016-10-14 11:41:16.627838-05	\N
-060152	CALPI	CAL	0601	A	2016-10-14 11:41:16.627838-05	\N
-060153	CUBIJÍES	CUB	0601	A	2016-10-14 11:41:16.627838-05	\N
-060154	FLORES	FLO	0601	A	2016-10-14 11:41:16.627838-05	\N
-060155	LICÁN	LIC	0601	A	2016-10-14 11:41:16.627838-05	\N
-060156	LICTO	LIC	0601	A	2016-10-14 11:41:16.627838-05	\N
-060157	PUNGALÁ	PUN	0601	A	2016-10-14 11:41:16.627838-05	\N
-060158	PUNÍN	PUN	0601	A	2016-10-14 11:41:16.627838-05	\N
-060159	QUIMIAG	QUI	0601	A	2016-10-14 11:41:16.627838-05	\N
-060160	SAN JUAN	SAN	0601	A	2016-10-14 11:41:16.627838-05	\N
-060161	SAN LUIS	SAN	0601	A	2016-10-14 11:41:16.627838-05	\N
-060250	ALAUSÍ	ALA	0602	A	2016-10-14 11:41:16.627838-05	\N
-060251	ACHUPALLAS	ACH	0602	A	2016-10-14 11:41:16.627838-05	\N
-060252	CUMANDÁ	CUM	0602	A	2016-10-14 11:41:16.627838-05	\N
-060253	GUASUNTOS	GUA	0602	A	2016-10-14 11:41:16.627838-05	\N
-060254	HUIGRA	HUI	0602	A	2016-10-14 11:41:16.627838-05	\N
-060255	MULTITUD	MUL	0602	A	2016-10-14 11:41:16.627838-05	\N
-060256	PISTISHÍ (NARIZ DEL DIABLO)	PIS	0602	A	2016-10-14 11:41:16.627838-05	\N
-060257	PUMALLACTA	PUM	0602	A	2016-10-14 11:41:16.627838-05	\N
-060258	SEVILLA	SEV	0602	A	2016-10-14 11:41:16.627838-05	\N
-060259	SIBAMBE	SIB	0602	A	2016-10-14 11:41:16.627838-05	\N
-060260	TIXÁN	TIX	0602	A	2016-10-14 11:41:16.627838-05	\N
-060301	CAJABAMBA	CAJ	0603	A	2016-10-14 11:41:16.627838-05	\N
-060302	SICALPA	SIC	0603	A	2016-10-14 11:41:16.627838-05	\N
-060350	VILLA LA UNIÓN (CAJABAMBA)	VIL	0603	A	2016-10-14 11:41:16.627838-05	\N
-060351	CAÑI	CAÑ	0603	A	2016-10-14 11:41:16.627838-05	\N
-060352	COLUMBE	COL	0603	A	2016-10-14 11:41:16.627838-05	\N
-060353	JUAN DE VELASCO (PANGOR)	JUA	0603	A	2016-10-14 11:41:16.627838-05	\N
-060354	SANTIAGO DE QUITO (CAB. EN SAN ANTONIO DE QUITO)	SAN	0603	A	2016-10-14 11:41:16.627838-05	\N
-060450	CHAMBO	CHA	0604	A	2016-10-14 11:41:16.627838-05	\N
-060550	CHUNCHI	CHU	0605	A	2016-10-14 11:41:16.627838-05	\N
-060551	CAPZOL	CAP	0605	A	2016-10-14 11:41:16.627838-05	\N
-060552	COMPUD	COM	0605	A	2016-10-14 11:41:16.627838-05	\N
-060553	GONZOL	GON	0605	A	2016-10-14 11:41:16.627838-05	\N
-060554	LLAGOS	LLA	0605	A	2016-10-14 11:41:16.627838-05	\N
-060650	GUAMOTE	GUA	0606	A	2016-10-14 11:41:16.627838-05	\N
-060651	CEBADAS	CEB	0606	A	2016-10-14 11:41:16.627838-05	\N
-060652	PALMIRA	PAL	0606	A	2016-10-14 11:41:16.627838-05	\N
-060701	EL ROSARIO	EL 	0607	A	2016-10-14 11:41:16.627838-05	\N
-060702	LA MATRIZ	LA 	0607	A	2016-10-14 11:41:16.627838-05	\N
-060750	GUANO	GUA	0607	A	2016-10-14 11:41:16.627838-05	\N
-060751	GUANANDO	GUA	0607	A	2016-10-14 11:41:16.627838-05	\N
-060752	ILAPO	ILA	0607	A	2016-10-14 11:41:16.627838-05	\N
-060753	LA PROVIDENCIA	LA 	0607	A	2016-10-14 11:41:16.627838-05	\N
-060754	SAN ANDRÉS	SAN	0607	A	2016-10-14 11:41:16.627838-05	\N
-060755	SAN GERARDO DE PACAICAGUÁN	SAN	0607	A	2016-10-14 11:41:16.627838-05	\N
-060756	SAN ISIDRO DE PATULÚ	SAN	0607	A	2016-10-14 11:41:16.627838-05	\N
-060757	SAN JOSÉ DEL CHAZO	SAN	0607	A	2016-10-14 11:41:16.627838-05	\N
-060758	SANTA FÉ DE GALÁN	SAN	0607	A	2016-10-14 11:41:16.627838-05	\N
-060759	VALPARAÍSO	VAL	0607	A	2016-10-14 11:41:16.627838-05	\N
-060850	PALLATANGA	PAL	0608	A	2016-10-14 11:41:16.627838-05	\N
-060950	PENIPE	PEN	0609	A	2016-10-14 11:41:16.627838-05	\N
-060951	EL ALTAR	EL 	0609	A	2016-10-14 11:41:16.627838-05	\N
-060952	MATUS	MAT	0609	A	2016-10-14 11:41:16.627838-05	\N
-060953	PUELA	PUE	0609	A	2016-10-14 11:41:16.627838-05	\N
-060954	SAN ANTONIO DE BAYUSHIG	SAN	0609	A	2016-10-14 11:41:16.627838-05	\N
-060955	LA CANDELARIA	LA 	0609	A	2016-10-14 11:41:16.627838-05	\N
-060956	BILBAO (CAB.EN QUILLUYACU)	BIL	0609	A	2016-10-14 11:41:16.627838-05	\N
-061050	CUMANDÁ	CUM	0610	A	2016-10-14 11:41:16.627838-05	\N
-070101	LA PROVIDENCIA	LA 	0701	A	2016-10-14 11:41:16.627838-05	\N
-070102	MACHALA	MAC	0701	A	2016-10-14 11:41:16.627838-05	\N
-070103	PUERTO BOLÍVAR	PUE	0701	A	2016-10-14 11:41:16.627838-05	\N
-070104	NUEVE DE MAYO	NUE	0701	A	2016-10-14 11:41:16.627838-05	\N
-070105	EL CAMBIO	EL 	0701	A	2016-10-14 11:41:16.627838-05	\N
-070150	MACHALA	MAC	0701	A	2016-10-14 11:41:16.627838-05	\N
-070151	EL CAMBIO	EL 	0701	A	2016-10-14 11:41:16.627838-05	\N
-070152	EL RETIRO	EL 	0701	A	2016-10-14 11:41:16.627838-05	\N
-070250	ARENILLAS	ARE	0702	A	2016-10-14 11:41:16.627838-05	\N
-070251	CHACRAS	CHA	0702	A	2016-10-14 11:41:16.627838-05	\N
-070252	LA LIBERTAD	LA 	0702	A	2016-10-14 11:41:16.627838-05	\N
-070253	LAS LAJAS (CAB. EN LA VICTORIA)	LAS	0702	A	2016-10-14 11:41:16.627838-05	\N
-070254	PALMALES	PAL	0702	A	2016-10-14 11:41:16.627838-05	\N
-070255	CARCABÓN	CAR	0702	A	2016-10-14 11:41:16.627838-05	\N
-070350	PACCHA	PAC	0703	A	2016-10-14 11:41:16.627838-05	\N
-070351	AYAPAMBA	AYA	0703	A	2016-10-14 11:41:16.627838-05	\N
-070352	CORDONCILLO	COR	0703	A	2016-10-14 11:41:16.627838-05	\N
-070353	MILAGRO	MIL	0703	A	2016-10-14 11:41:16.627838-05	\N
-070354	SAN JOSÉ	SAN	0703	A	2016-10-14 11:41:16.627838-05	\N
-070355	SAN JUAN DE CERRO AZUL	SAN	0703	A	2016-10-14 11:41:16.627838-05	\N
-070450	BALSAS	BAL	0704	A	2016-10-14 11:41:16.627838-05	\N
-070451	BELLAMARÍA	BEL	0704	A	2016-10-14 11:41:16.627838-05	\N
-070550	CHILLA	CHI	0705	A	2016-10-14 11:41:16.627838-05	\N
-070650	EL GUABO	EL 	0706	A	2016-10-14 11:41:16.627838-05	\N
-070651	BARBONES (SUCRE)	BAR	0706	A	2016-10-14 11:41:16.627838-05	\N
-070652	LA IBERIA	LA 	0706	A	2016-10-14 11:41:16.627838-05	\N
-070653	TENDALES (CAB.EN PUERTO TENDALES)	TEN	0706	A	2016-10-14 11:41:16.627838-05	\N
-070654	RÍO BONITO	RÍO	0706	A	2016-10-14 11:41:16.627838-05	\N
-070701	ECUADOR	ECU	0707	A	2016-10-14 11:41:16.627838-05	\N
-070702	EL PARAÍSO	EL 	0707	A	2016-10-14 11:41:16.627838-05	\N
-070703	HUALTACO	HUA	0707	A	2016-10-14 11:41:16.627838-05	\N
-070704	MILTON REYES	MIL	0707	A	2016-10-14 11:41:16.627838-05	\N
-070705	UNIÓN LOJANA	UNI	0707	A	2016-10-14 11:41:16.627838-05	\N
-070750	HUAQUILLAS	HUA	0707	A	2016-10-14 11:41:16.627838-05	\N
-070850	MARCABELÍ	MAR	0708	A	2016-10-14 11:41:16.627838-05	\N
-070851	EL INGENIO	EL 	0708	A	2016-10-14 11:41:16.627838-05	\N
-070901	BOLÍVAR	BOL	0709	A	2016-10-14 11:41:16.627838-05	\N
-070902	LOMA DE FRANCO	LOM	0709	A	2016-10-14 11:41:16.627838-05	\N
-070903	OCHOA LEÓN (MATRIZ)	OCH	0709	A	2016-10-14 11:41:16.627838-05	\N
-070904	TRES CERRITOS	TRE	0709	A	2016-10-14 11:41:16.627838-05	\N
-070950	PASAJE	PAS	0709	A	2016-10-14 11:41:16.627838-05	\N
-070951	BUENAVISTA	BUE	0709	A	2016-10-14 11:41:16.627838-05	\N
-070952	CASACAY	CAS	0709	A	2016-10-14 11:41:16.627838-05	\N
-070953	LA PEAÑA	LA 	0709	A	2016-10-14 11:41:16.627838-05	\N
-070954	PROGRESO	PRO	0709	A	2016-10-14 11:41:16.627838-05	\N
-070955	UZHCURRUMI	UZH	0709	A	2016-10-14 11:41:16.627838-05	\N
-070956	CAÑAQUEMADA	CAÑ	0709	A	2016-10-14 11:41:16.627838-05	\N
-071001	LA MATRIZ	LA 	0710	A	2016-10-14 11:41:16.627838-05	\N
-071002	LA SUSAYA	LA 	0710	A	2016-10-14 11:41:16.627838-05	\N
-071003	PIÑAS GRANDE	PIÑ	0710	A	2016-10-14 11:41:16.627838-05	\N
-071050	PIÑAS	PIÑ	0710	A	2016-10-14 11:41:16.627838-05	\N
-071051	CAPIRO (CAB. EN LA CAPILLA DE CAPIRO)	CAP	0710	A	2016-10-14 11:41:16.627838-05	\N
-071052	LA BOCANA	LA 	0710	A	2016-10-14 11:41:16.627838-05	\N
-071053	MOROMORO (CAB. EN EL VADO)	MOR	0710	A	2016-10-14 11:41:16.627838-05	\N
-071054	PIEDRAS	PIE	0710	A	2016-10-14 11:41:16.627838-05	\N
-071055	SAN ROQUE (AMBROSIO MALDONADO)	SAN	0710	A	2016-10-14 11:41:16.627838-05	\N
-071056	SARACAY	SAR	0710	A	2016-10-14 11:41:16.627838-05	\N
-071150	PORTOVELO	POR	0711	A	2016-10-14 11:41:16.627838-05	\N
-071151	CURTINCAPA	CUR	0711	A	2016-10-14 11:41:16.627838-05	\N
-071152	MORALES	MOR	0711	A	2016-10-14 11:41:16.627838-05	\N
-071153	SALATÍ	SAL	0711	A	2016-10-14 11:41:16.627838-05	\N
-071201	SANTA ROSA	SAN	0712	A	2016-10-14 11:41:16.627838-05	\N
-071202	PUERTO JELÍ	PUE	0712	A	2016-10-14 11:41:16.627838-05	\N
-071203	BALNEARIO JAMBELÍ (SATÉLITE)	BAL	0712	A	2016-10-14 11:41:16.627838-05	\N
-071204	JUMÓN (SATÉLITE)	JUM	0712	A	2016-10-14 11:41:16.627838-05	\N
-071205	NUEVO SANTA ROSA	NUE	0712	A	2016-10-14 11:41:16.627838-05	\N
-071250	SANTA ROSA	SAN	0712	A	2016-10-14 11:41:16.627838-05	\N
-071251	BELLAVISTA	BEL	0712	A	2016-10-14 11:41:16.627838-05	\N
-071252	JAMBELÍ	JAM	0712	A	2016-10-14 11:41:16.627838-05	\N
-071253	LA AVANZADA	LA 	0712	A	2016-10-14 11:41:16.627838-05	\N
-071254	SAN ANTONIO	SAN	0712	A	2016-10-14 11:41:16.627838-05	\N
-071255	TORATA	TOR	0712	A	2016-10-14 11:41:16.627838-05	\N
-071256	VICTORIA	VIC	0712	A	2016-10-14 11:41:16.627838-05	\N
-071257	BELLAMARÍA	BEL	0712	A	2016-10-14 11:41:16.627838-05	\N
-071350	ZARUMA	ZAR	0713	A	2016-10-14 11:41:16.627838-05	\N
-071351	ABAÑÍN	ABA	0713	A	2016-10-14 11:41:16.627838-05	\N
-071352	ARCAPAMBA	ARC	0713	A	2016-10-14 11:41:16.627838-05	\N
-071353	GUANAZÁN	GUA	0713	A	2016-10-14 11:41:16.627838-05	\N
-071354	GUIZHAGUIÑA	GUI	0713	A	2016-10-14 11:41:16.627838-05	\N
-071355	HUERTAS	HUE	0713	A	2016-10-14 11:41:16.627838-05	\N
-071356	MALVAS	MAL	0713	A	2016-10-14 11:41:16.627838-05	\N
-071357	MULUNCAY GRANDE	MUL	0713	A	2016-10-14 11:41:16.627838-05	\N
-071358	SINSAO	SIN	0713	A	2016-10-14 11:41:16.627838-05	\N
-071359	SALVIAS	SAL	0713	A	2016-10-14 11:41:16.627838-05	\N
-071401	LA VICTORIA	LA 	0714	A	2016-10-14 11:41:16.627838-05	\N
-071402	PLATANILLOS	PLA	0714	A	2016-10-14 11:41:16.627838-05	\N
-071403	VALLE HERMOSO	VAL	0714	A	2016-10-14 11:41:16.627838-05	\N
-071450	LA VICTORIA	LA 	0714	A	2016-10-14 11:41:16.627838-05	\N
-071451	LA LIBERTAD	LA 	0714	A	2016-10-14 11:41:16.627838-05	\N
-071452	EL PARAÍSO	EL 	0714	A	2016-10-14 11:41:16.627838-05	\N
-071453	SAN ISIDRO	SAN	0714	A	2016-10-14 11:41:16.627838-05	\N
-080101	BARTOLOMÉ RUIZ (CÉSAR FRANCO CARRIÓN)	BAR	0801	A	2016-10-14 11:41:16.627838-05	\N
-080102	5 DE AGOSTO	5 D	0801	A	2016-10-14 11:41:16.627838-05	\N
-080103	ESMERALDAS	ESM	0801	A	2016-10-14 11:41:16.627838-05	\N
-080104	LUIS TELLO (LAS PALMAS)	LUI	0801	A	2016-10-14 11:41:16.627838-05	\N
-080105	SIMÓN PLATA TORRES	SIM	0801	A	2016-10-14 11:41:16.627838-05	\N
-080150	ESMERALDAS	ESM	0801	A	2016-10-14 11:41:16.627838-05	\N
-080151	ATACAMES	ATA	0801	A	2016-10-14 11:41:16.627838-05	\N
-080152	CAMARONES (CAB. EN SAN VICENTE)	CAM	0801	A	2016-10-14 11:41:16.627838-05	\N
-080153	CRNEL. CARLOS CONCHA TORRES (CAB.EN HUELE)	CRN	0801	A	2016-10-14 11:41:16.627838-05	\N
-080154	CHINCA	CHI	0801	A	2016-10-14 11:41:16.627838-05	\N
-080155	CHONTADURO	CHO	0801	A	2016-10-14 11:41:16.627838-05	\N
-080156	CHUMUNDÉ	CHU	0801	A	2016-10-14 11:41:16.627838-05	\N
-080157	LAGARTO	LAG	0801	A	2016-10-14 11:41:16.627838-05	\N
-080158	LA UNIÓN	LA 	0801	A	2016-10-14 11:41:16.627838-05	\N
-080159	MAJUA	MAJ	0801	A	2016-10-14 11:41:16.627838-05	\N
-080160	MONTALVO (CAB. EN HORQUETA)	MON	0801	A	2016-10-14 11:41:16.627838-05	\N
-080161	RÍO VERDE	RÍO	0801	A	2016-10-14 11:41:16.627838-05	\N
-080162	ROCAFUERTE	ROC	0801	A	2016-10-14 11:41:16.627838-05	\N
-080163	SAN MATEO	SAN	0801	A	2016-10-14 11:41:16.627838-05	\N
-080164	SÚA (CAB. EN LA BOCANA)	SÚA	0801	A	2016-10-14 11:41:16.627838-05	\N
-080165	TABIAZO	TAB	0801	A	2016-10-14 11:41:16.627838-05	\N
-080166	TACHINA	TAC	0801	A	2016-10-14 11:41:16.627838-05	\N
-080167	TONCHIGÜE	TON	0801	A	2016-10-14 11:41:16.627838-05	\N
-080168	VUELTA LARGA	VUE	0801	A	2016-10-14 11:41:16.627838-05	\N
-080250	VALDEZ (LIMONES)	VAL	0802	A	2016-10-14 11:41:16.627838-05	\N
-080251	ANCHAYACU	ANC	0802	A	2016-10-14 11:41:16.627838-05	\N
-080252	ATAHUALPA (CAB. EN CAMARONES)	ATA	0802	A	2016-10-14 11:41:16.627838-05	\N
-080253	BORBÓN	BOR	0802	A	2016-10-14 11:41:16.627838-05	\N
-080254	LA TOLA	LA 	0802	A	2016-10-14 11:41:16.627838-05	\N
-080255	LUIS VARGAS TORRES (CAB. EN PLAYA DE ORO)	LUI	0802	A	2016-10-14 11:41:16.627838-05	\N
-080256	MALDONADO	MAL	0802	A	2016-10-14 11:41:16.627838-05	\N
-080257	PAMPANAL DE BOLÍVAR	PAM	0802	A	2016-10-14 11:41:16.627838-05	\N
-080258	SAN FRANCISCO DE ONZOLE	SAN	0802	A	2016-10-14 11:41:16.627838-05	\N
-080259	SANTO DOMINGO DE ONZOLE	SAN	0802	A	2016-10-14 11:41:16.627838-05	\N
-080260	SELVA ALEGRE	SEL	0802	A	2016-10-14 11:41:16.627838-05	\N
-080261	TELEMBÍ	TEL	0802	A	2016-10-14 11:41:16.627838-05	\N
-080262	COLÓN ELOY DEL MARÍA	COL	0802	A	2016-10-14 11:41:16.627838-05	\N
-080263	SAN JOSÉ DE CAYAPAS	SAN	0802	A	2016-10-14 11:41:16.627838-05	\N
-080264	TIMBIRÉ	TIM	0802	A	2016-10-14 11:41:16.627838-05	\N
-080350	MUISNE	MUI	0803	A	2016-10-14 11:41:16.627838-05	\N
-080351	BOLÍVAR	BOL	0803	A	2016-10-14 11:41:16.627838-05	\N
-080352	DAULE	DAU	0803	A	2016-10-14 11:41:16.627838-05	\N
-080353	GALERA	GAL	0803	A	2016-10-14 11:41:16.627838-05	\N
-080354	QUINGUE (OLMEDO PERDOMO FRANCO)	QUI	0803	A	2016-10-14 11:41:16.627838-05	\N
-080355	SALIMA	SAL	0803	A	2016-10-14 11:41:16.627838-05	\N
-080356	SAN FRANCISCO	SAN	0803	A	2016-10-14 11:41:16.627838-05	\N
-080357	SAN GREGORIO	SAN	0803	A	2016-10-14 11:41:16.627838-05	\N
-080358	SAN JOSÉ DE CHAMANGA (CAB.EN CHAMANGA)	SAN	0803	A	2016-10-14 11:41:16.627838-05	\N
-080450	ROSA ZÁRATE (QUININDÉ)	ROS	0804	A	2016-10-14 11:41:16.627838-05	\N
-080451	CUBE	CUB	0804	A	2016-10-14 11:41:16.627838-05	\N
-080452	CHURA (CHANCAMA) (CAB. EN EL YERBERO)	CHU	0804	A	2016-10-14 11:41:16.627838-05	\N
-080453	MALIMPIA	MAL	0804	A	2016-10-14 11:41:16.627838-05	\N
-080454	VICHE	VIC	0804	A	2016-10-14 11:41:16.627838-05	\N
-080455	LA UNIÓN	LA 	0804	A	2016-10-14 11:41:16.627838-05	\N
-080550	SAN LORENZO	SAN	0805	A	2016-10-14 11:41:16.627838-05	\N
-080551	ALTO TAMBO (CAB. EN GUADUAL)	ALT	0805	A	2016-10-14 11:41:16.627838-05	\N
-080552	ANCÓN (PICHANGAL) (CAB. EN PALMA REAL)	ANC	0805	A	2016-10-14 11:41:16.627838-05	\N
-080553	CALDERÓN	CAL	0805	A	2016-10-14 11:41:16.627838-05	\N
-080554	CARONDELET	CAR	0805	A	2016-10-14 11:41:16.627838-05	\N
-080555	5 DE JUNIO (CAB. EN UIMBI)	5 D	0805	A	2016-10-14 11:41:16.627838-05	\N
-080556	CONCEPCIÓN	CON	0805	A	2016-10-14 11:41:16.627838-05	\N
-080557	MATAJE (CAB. EN SANTANDER)	MAT	0805	A	2016-10-14 11:41:16.627838-05	\N
-080558	SAN JAVIER DE CACHAVÍ (CAB. EN SAN JAVIER)	SAN	0805	A	2016-10-14 11:41:16.627838-05	\N
-080559	SANTA RITA	SAN	0805	A	2016-10-14 11:41:16.627838-05	\N
-080560	TAMBILLO	TAM	0805	A	2016-10-14 11:41:16.627838-05	\N
-080561	TULULBÍ (CAB. EN RICAURTE)	TUL	0805	A	2016-10-14 11:41:16.627838-05	\N
-080562	URBINA	URB	0805	A	2016-10-14 11:41:16.627838-05	\N
-080650	ATACAMES	ATA	0806	A	2016-10-14 11:41:16.627838-05	\N
-080651	LA UNIÓN	LA 	0806	A	2016-10-14 11:41:16.627838-05	\N
-080652	SÚA (CAB. EN LA BOCANA)	SÚA	0806	A	2016-10-14 11:41:16.627838-05	\N
-080653	TONCHIGÜE	TON	0806	A	2016-10-14 11:41:16.627838-05	\N
-080654	TONSUPA	TON	0806	A	2016-10-14 11:41:16.627838-05	\N
-080750	RIOVERDE	RIO	0807	A	2016-10-14 11:41:16.627838-05	\N
-080751	CHONTADURO	CHO	0807	A	2016-10-14 11:41:16.627838-05	\N
-080752	CHUMUNDÉ	CHU	0807	A	2016-10-14 11:41:16.627838-05	\N
-080753	LAGARTO	LAG	0807	A	2016-10-14 11:41:16.627838-05	\N
-080754	MONTALVO (CAB. EN HORQUETA)	MON	0807	A	2016-10-14 11:41:16.627838-05	\N
-080755	ROCAFUERTE	ROC	0807	A	2016-10-14 11:41:16.627838-05	\N
-080850	LA CONCORDIA	LA 	0808	A	2016-10-14 11:41:16.627838-05	\N
-080851	MONTERREY	MON	0808	A	2016-10-14 11:41:16.627838-05	\N
-080852	LA VILLEGAS	LA 	0808	A	2016-10-14 11:41:16.627838-05	\N
-080853	PLAN PILOTO	PLA	0808	A	2016-10-14 11:41:16.627838-05	\N
-090101	AYACUCHO	AYA	0901	A	2016-10-14 11:41:16.627838-05	\N
-090102	BOLÍVAR (SAGRARIO)	BOL	0901	A	2016-10-14 11:41:16.627838-05	\N
-090103	CARBO (CONCEPCIÓN)	CAR	0901	A	2016-10-14 11:41:16.627838-05	\N
-090104	FEBRES CORDERO	FEB	0901	A	2016-10-14 11:41:16.627838-05	\N
-090105	GARCÍA MORENO	GAR	0901	A	2016-10-14 11:41:16.627838-05	\N
-090106	LETAMENDI	LET	0901	A	2016-10-14 11:41:16.627838-05	\N
-090107	NUEVE DE OCTUBRE	NUE	0901	A	2016-10-14 11:41:16.627838-05	\N
-090108	OLMEDO (SAN ALEJO)	OLM	0901	A	2016-10-14 11:41:16.627838-05	\N
-090109	ROCA	ROC	0901	A	2016-10-14 11:41:16.627838-05	\N
-090110	ROCAFUERTE	ROC	0901	A	2016-10-14 11:41:16.627838-05	\N
-090111	SUCRE	SUC	0901	A	2016-10-14 11:41:16.627838-05	\N
-090112	TARQUI	TAR	0901	A	2016-10-14 11:41:16.627838-05	\N
-090113	URDANETA	URD	0901	A	2016-10-14 11:41:16.627838-05	\N
-090114	XIMENA	XIM	0901	A	2016-10-14 11:41:16.627838-05	\N
-090115	PASCUALES	PAS	0901	A	2016-10-14 11:41:16.627838-05	\N
-090150	GUAYAQUIL	GUA	0901	A	2016-10-14 11:41:16.627838-05	\N
-090151	CHONGÓN	CHO	0901	A	2016-10-14 11:41:16.627838-05	\N
-090152	JUAN GÓMEZ RENDÓN (PROGRESO)	JUA	0901	A	2016-10-14 11:41:16.627838-05	\N
-090153	MORRO	MOR	0901	A	2016-10-14 11:41:16.627838-05	\N
-090154	PASCUALES	PAS	0901	A	2016-10-14 11:41:16.627838-05	\N
-090155	PLAYAS (GRAL. VILLAMIL)	PLA	0901	A	2016-10-14 11:41:16.627838-05	\N
-090156	POSORJA	POS	0901	A	2016-10-14 11:41:16.627838-05	\N
-090157	PUNÁ	PUN	0901	A	2016-10-14 11:41:16.627838-05	\N
-090158	TENGUEL	TEN	0901	A	2016-10-14 11:41:16.627838-05	\N
-090250	ALFREDO BAQUERIZO MORENO (JUJÁN)	ALF	0902	A	2016-10-14 11:41:16.627838-05	\N
-090350	BALAO	BAL	0903	A	2016-10-14 11:41:16.627838-05	\N
-090450	BALZAR	BAL	0904	A	2016-10-14 11:41:16.627838-05	\N
-090550	COLIMES	COL	0905	A	2016-10-14 11:41:16.627838-05	\N
-090551	SAN JACINTO	SAN	0905	A	2016-10-14 11:41:16.627838-05	\N
-090601	DAULE	DAU	0906	A	2016-10-14 11:41:16.627838-05	\N
-090602	LA AURORA (SATÉLITE)	LA 	0906	A	2016-10-14 11:41:16.627838-05	\N
-090603	BANIFE	BAN	0906	A	2016-10-14 11:41:16.627838-05	\N
-090604	EMILIANO CAICEDO MARCOS	EMI	0906	A	2016-10-14 11:41:16.627838-05	\N
-090605	MAGRO	MAG	0906	A	2016-10-14 11:41:16.627838-05	\N
-090606	PADRE JUAN BAUTISTA AGUIRRE	PAD	0906	A	2016-10-14 11:41:16.627838-05	\N
-090607	SANTA CLARA	SAN	0906	A	2016-10-14 11:41:16.627838-05	\N
-090608	VICENTE PIEDRAHITA	VIC	0906	A	2016-10-14 11:41:16.627838-05	\N
-090650	DAULE	DAU	0906	A	2016-10-14 11:41:16.627838-05	\N
-090651	ISIDRO AYORA (SOLEDAD)	ISI	0906	A	2016-10-14 11:41:16.627838-05	\N
-090652	JUAN BAUTISTA AGUIRRE (LOS TINTOS)	JUA	0906	A	2016-10-14 11:41:16.627838-05	\N
-090653	LAUREL	LAU	0906	A	2016-10-14 11:41:16.627838-05	\N
-090654	LIMONAL	LIM	0906	A	2016-10-14 11:41:16.627838-05	\N
-090655	LOMAS DE SARGENTILLO	LOM	0906	A	2016-10-14 11:41:16.627838-05	\N
-090656	LOS LOJAS (ENRIQUE BAQUERIZO MORENO)	LOS	0906	A	2016-10-14 11:41:16.627838-05	\N
-090657	PIEDRAHITA (NOBOL)	PIE	0906	A	2016-10-14 11:41:16.627838-05	\N
-090701	ELOY ALFARO (DURÁN)	ELO	0907	A	2016-10-14 11:41:16.627838-05	\N
-090702	EL RECREO	EL 	0907	A	2016-10-14 11:41:16.627838-05	\N
-090750	ELOY ALFARO (DURÁN)	ELO	0907	A	2016-10-14 11:41:16.627838-05	\N
-090850	VELASCO IBARRA (EL EMPALME)	VEL	0908	A	2016-10-14 11:41:16.627838-05	\N
-090851	GUAYAS (PUEBLO NUEVO)	GUA	0908	A	2016-10-14 11:41:16.627838-05	\N
-090852	EL ROSARIO	EL 	0908	A	2016-10-14 11:41:16.627838-05	\N
-090950	EL TRIUNFO	EL 	0909	A	2016-10-14 11:41:16.627838-05	\N
-091050	MILAGRO	MIL	0910	A	2016-10-14 11:41:16.627838-05	\N
-091051	CHOBO	CHO	0910	A	2016-10-14 11:41:16.627838-05	\N
-091052	GENERAL ELIZALDE (BUCAY)	GEN	0910	A	2016-10-14 11:41:16.627838-05	\N
-091053	MARISCAL SUCRE (HUAQUES)	MAR	0910	A	2016-10-14 11:41:16.627838-05	\N
-091054	ROBERTO ASTUDILLO (CAB. EN CRUCE DE VENECIA)	ROB	0910	A	2016-10-14 11:41:16.627838-05	\N
-091150	NARANJAL	NAR	0911	A	2016-10-14 11:41:16.627838-05	\N
-091151	JESÚS MARÍA	JES	0911	A	2016-10-14 11:41:16.627838-05	\N
-091152	SAN CARLOS	SAN	0911	A	2016-10-14 11:41:16.627838-05	\N
-091153	SANTA ROSA DE FLANDES	SAN	0911	A	2016-10-14 11:41:16.627838-05	\N
-091154	TAURA	TAU	0911	A	2016-10-14 11:41:16.627838-05	\N
-091250	NARANJITO	NAR	0912	A	2016-10-14 11:41:16.627838-05	\N
-091350	PALESTINA	PAL	0913	A	2016-10-14 11:41:16.627838-05	\N
-091450	PEDRO CARBO	PED	0914	A	2016-10-14 11:41:16.627838-05	\N
-091451	VALLE DE LA VIRGEN	VAL	0914	A	2016-10-14 11:41:16.627838-05	\N
-091452	SABANILLA	SAB	0914	A	2016-10-14 11:41:16.627838-05	\N
-091601	SAMBORONDÓN	SAM	0916	A	2016-10-14 11:41:16.627838-05	\N
-091602	LA PUNTILLA (SATÉLITE)	LA 	0916	A	2016-10-14 11:41:16.627838-05	\N
-091650	SAMBORONDÓN	SAM	0916	A	2016-10-14 11:41:16.627838-05	\N
-091651	TARIFA	TAR	0916	A	2016-10-14 11:41:16.627838-05	\N
-091850	SANTA LUCÍA	SAN	0918	A	2016-10-14 11:41:16.627838-05	\N
-091901	BOCANA	BOC	0919	A	2016-10-14 11:41:16.627838-05	\N
-091902	CANDILEJOS	CAN	0919	A	2016-10-14 11:41:16.627838-05	\N
-091903	CENTRAL	CEN	0919	A	2016-10-14 11:41:16.627838-05	\N
-091904	PARAÍSO	PAR	0919	A	2016-10-14 11:41:16.627838-05	\N
-091905	SAN MATEO	SAN	0919	A	2016-10-14 11:41:16.627838-05	\N
-091950	EL SALITRE (LAS RAMAS)	EL 	0919	A	2016-10-14 11:41:16.627838-05	\N
-091951	GRAL. VERNAZA (DOS ESTEROS)	GRA	0919	A	2016-10-14 11:41:16.627838-05	\N
-091952	LA VICTORIA (ÑAUZA)	LA 	0919	A	2016-10-14 11:41:16.627838-05	\N
-091953	JUNQUILLAL	JUN	0919	A	2016-10-14 11:41:16.627838-05	\N
-092050	SAN JACINTO DE YAGUACHI	SAN	0920	A	2016-10-14 11:41:16.627838-05	\N
-092051	CRNEL. LORENZO DE GARAICOA (PEDREGAL)	CRN	0920	A	2016-10-14 11:41:16.627838-05	\N
-092052	CRNEL. MARCELINO MARIDUEÑA (SAN CARLOS)	CRN	0920	A	2016-10-14 11:41:16.627838-05	\N
-092053	GRAL. PEDRO J. MONTERO (BOLICHE)	GRA	0920	A	2016-10-14 11:41:16.627838-05	\N
-092054	SIMÓN BOLÍVAR	SIM	0920	A	2016-10-14 11:41:16.627838-05	\N
-092055	YAGUACHI VIEJO (CONE)	YAG	0920	A	2016-10-14 11:41:16.627838-05	\N
-092056	VIRGEN DE FÁTIMA	VIR	0920	A	2016-10-14 11:41:16.627838-05	\N
-092150	GENERAL VILLAMIL (PLAYAS)	GEN	0921	A	2016-10-14 11:41:16.627838-05	\N
-092250	SIMÓN BOLÍVAR	SIM	0922	A	2016-10-14 11:41:16.627838-05	\N
-092251	CRNEL.LORENZO DE GARAICOA (PEDREGAL)	CRN	0922	A	2016-10-14 11:41:16.627838-05	\N
-092350	CORONEL MARCELINO MARIDUEÑA (SAN CARLOS)	COR	0923	A	2016-10-14 11:41:16.627838-05	\N
-092450	LOMAS DE SARGENTILLO	LOM	0924	A	2016-10-14 11:41:16.627838-05	\N
-092451	ISIDRO AYORA (SOLEDAD)	ISI	0924	A	2016-10-14 11:41:16.627838-05	\N
-092550	NARCISA DE JESÚS	NAR	0925	A	2016-10-14 11:41:16.627838-05	\N
-092750	GENERAL ANTONIO ELIZALDE (BUCAY)	GEN	0927	A	2016-10-14 11:41:16.627838-05	\N
-092850	ISIDRO AYORA	ISI	0928	A	2016-10-14 11:41:16.627838-05	\N
-110101	EL SAGRARIO	EL 	1101	A	2016-10-14 11:41:16.627838-05	\N
-110102	SAN SEBASTIÁN	SAN	1101	A	2016-10-14 11:41:16.627838-05	\N
-110103	SUCRE	SUC	1101	A	2016-10-14 11:41:16.627838-05	\N
-110104	VALLE	VAL	1101	A	2016-10-14 11:41:16.627838-05	\N
-110150	LOJA	LOJ	1101	A	2016-10-14 11:41:16.627838-05	\N
-110151	CHANTACO	CHA	1101	A	2016-10-14 11:41:16.627838-05	\N
-110152	CHUQUIRIBAMBA	CHU	1101	A	2016-10-14 11:41:16.627838-05	\N
-110153	EL CISNE	EL 	1101	A	2016-10-14 11:41:16.627838-05	\N
-110154	GUALEL	GUA	1101	A	2016-10-14 11:41:16.627838-05	\N
-110155	JIMBILLA	JIM	1101	A	2016-10-14 11:41:16.627838-05	\N
-110156	MALACATOS (VALLADOLID)	MAL	1101	A	2016-10-14 11:41:16.627838-05	\N
-110157	SAN LUCAS	SAN	1101	A	2016-10-14 11:41:16.627838-05	\N
-110158	SAN PEDRO DE VILCABAMBA	SAN	1101	A	2016-10-14 11:41:16.627838-05	\N
-110159	SANTIAGO	SAN	1101	A	2016-10-14 11:41:16.627838-05	\N
-110160	TAQUIL (MIGUEL RIOFRÍO)	TAQ	1101	A	2016-10-14 11:41:16.627838-05	\N
-110161	VILCABAMBA (VICTORIA)	VIL	1101	A	2016-10-14 11:41:16.627838-05	\N
-110162	YANGANA (ARSENIO CASTILLO)	YAN	1101	A	2016-10-14 11:41:16.627838-05	\N
-110163	QUINARA	QUI	1101	A	2016-10-14 11:41:16.627838-05	\N
-110201	CARIAMANGA	CAR	1102	A	2016-10-14 11:41:16.627838-05	\N
-110202	CHILE	CHI	1102	A	2016-10-14 11:41:16.627838-05	\N
-110203	SAN VICENTE	SAN	1102	A	2016-10-14 11:41:16.627838-05	\N
-110250	CARIAMANGA	CAR	1102	A	2016-10-14 11:41:16.627838-05	\N
-110251	COLAISACA	COL	1102	A	2016-10-14 11:41:16.627838-05	\N
-110252	EL LUCERO	EL 	1102	A	2016-10-14 11:41:16.627838-05	\N
-110253	UTUANA	UTU	1102	A	2016-10-14 11:41:16.627838-05	\N
-110254	SANGUILLÍN	SAN	1102	A	2016-10-14 11:41:16.627838-05	\N
-110301	CATAMAYO	CAT	1103	A	2016-10-14 11:41:16.627838-05	\N
-110302	SAN JOSÉ	SAN	1103	A	2016-10-14 11:41:16.627838-05	\N
-110350	CATAMAYO (LA TOMA)	CAT	1103	A	2016-10-14 11:41:16.627838-05	\N
-110351	EL TAMBO	EL 	1103	A	2016-10-14 11:41:16.627838-05	\N
-110352	GUAYQUICHUMA	GUA	1103	A	2016-10-14 11:41:16.627838-05	\N
-110353	SAN PEDRO DE LA BENDITA	SAN	1103	A	2016-10-14 11:41:16.627838-05	\N
-110354	ZAMBI	ZAM	1103	A	2016-10-14 11:41:16.627838-05	\N
-110450	CELICA	CEL	1104	A	2016-10-14 11:41:16.627838-05	\N
-110451	CRUZPAMBA (CAB. EN CARLOS BUSTAMANTE)	CRU	1104	A	2016-10-14 11:41:16.627838-05	\N
-110452	CHAQUINAL	CHA	1104	A	2016-10-14 11:41:16.627838-05	\N
-110453	12 DE DICIEMBRE (CAB. EN ACHIOTES)	12 	1104	A	2016-10-14 11:41:16.627838-05	\N
-110454	PINDAL (FEDERICO PÁEZ)	PIN	1104	A	2016-10-14 11:41:16.627838-05	\N
-110455	POZUL (SAN JUAN DE POZUL)	POZ	1104	A	2016-10-14 11:41:16.627838-05	\N
-110456	SABANILLA	SAB	1104	A	2016-10-14 11:41:16.627838-05	\N
-110457	TNTE. MAXIMILIANO RODRÍGUEZ LOAIZA	TNT	1104	A	2016-10-14 11:41:16.627838-05	\N
-110550	CHAGUARPAMBA	CHA	1105	A	2016-10-14 11:41:16.627838-05	\N
-110551	BUENAVISTA	BUE	1105	A	2016-10-14 11:41:16.627838-05	\N
-110552	EL ROSARIO	EL 	1105	A	2016-10-14 11:41:16.627838-05	\N
-110553	SANTA RUFINA	SAN	1105	A	2016-10-14 11:41:16.627838-05	\N
-110554	AMARILLOS	AMA	1105	A	2016-10-14 11:41:16.627838-05	\N
-110650	AMALUZA	AMA	1106	A	2016-10-14 11:41:16.627838-05	\N
-110651	BELLAVISTA	BEL	1106	A	2016-10-14 11:41:16.627838-05	\N
-110652	JIMBURA	JIM	1106	A	2016-10-14 11:41:16.627838-05	\N
-110653	SANTA TERESITA	SAN	1106	A	2016-10-14 11:41:16.627838-05	\N
-110654	27 DE ABRIL (CAB. EN LA NARANJA)	27 	1106	A	2016-10-14 11:41:16.627838-05	\N
-110655	EL INGENIO	EL 	1106	A	2016-10-14 11:41:16.627838-05	\N
-110656	EL AIRO	EL 	1106	A	2016-10-14 11:41:16.627838-05	\N
-110750	GONZANAMÁ	GON	1107	A	2016-10-14 11:41:16.627838-05	\N
-110751	CHANGAIMINA (LA LIBERTAD)	CHA	1107	A	2016-10-14 11:41:16.627838-05	\N
-110752	FUNDOCHAMBA	FUN	1107	A	2016-10-14 11:41:16.627838-05	\N
-110753	NAMBACOLA	NAM	1107	A	2016-10-14 11:41:16.627838-05	\N
-110754	PURUNUMA (EGUIGUREN)	PUR	1107	A	2016-10-14 11:41:16.627838-05	\N
-110755	QUILANGA (LA PAZ)	QUI	1107	A	2016-10-14 11:41:16.627838-05	\N
-110756	SACAPALCA	SAC	1107	A	2016-10-14 11:41:16.627838-05	\N
-110757	SAN ANTONIO DE LAS ARADAS (CAB. EN LAS ARADAS)	SAN	1107	A	2016-10-14 11:41:16.627838-05	\N
-110801	GENERAL ELOY ALFARO (SAN SEBASTIÁN)	GEN	1108	A	2016-10-14 11:41:16.627838-05	\N
-110802	MACARÁ (MANUEL ENRIQUE RENGEL SUQUILANDA)	MAC	1108	A	2016-10-14 11:41:16.627838-05	\N
-110850	MACARÁ	MAC	1108	A	2016-10-14 11:41:16.627838-05	\N
-110851	LARAMA	LAR	1108	A	2016-10-14 11:41:16.627838-05	\N
-110852	LA VICTORIA	LA 	1108	A	2016-10-14 11:41:16.627838-05	\N
-110853	SABIANGO (LA CAPILLA)	SAB	1108	A	2016-10-14 11:41:16.627838-05	\N
-110901	CATACOCHA	CAT	1109	A	2016-10-14 11:41:16.627838-05	\N
-110902	LOURDES	LOU	1109	A	2016-10-14 11:41:16.627838-05	\N
-110950	CATACOCHA	CAT	1109	A	2016-10-14 11:41:16.627838-05	\N
-110951	CANGONAMÁ	CAN	1109	A	2016-10-14 11:41:16.627838-05	\N
-110952	GUACHANAMÁ	GUA	1109	A	2016-10-14 11:41:16.627838-05	\N
-110953	LA TINGUE	LA 	1109	A	2016-10-14 11:41:16.627838-05	\N
-110954	LAURO GUERRERO	LAU	1109	A	2016-10-14 11:41:16.627838-05	\N
-110955	OLMEDO (SANTA BÁRBARA)	OLM	1109	A	2016-10-14 11:41:16.627838-05	\N
-110956	ORIANGA	ORI	1109	A	2016-10-14 11:41:16.627838-05	\N
-110957	SAN ANTONIO	SAN	1109	A	2016-10-14 11:41:16.627838-05	\N
-110958	CASANGA	CAS	1109	A	2016-10-14 11:41:16.627838-05	\N
-110959	YAMANA	YAM	1109	A	2016-10-14 11:41:16.627838-05	\N
-111050	ALAMOR	ALA	1110	A	2016-10-14 11:41:16.627838-05	\N
-111051	CIANO	CIA	1110	A	2016-10-14 11:41:16.627838-05	\N
-111052	EL ARENAL	EL 	1110	A	2016-10-14 11:41:16.627838-05	\N
-111053	EL LIMO (MARIANA DE JESÚS)	EL 	1110	A	2016-10-14 11:41:16.627838-05	\N
-111054	MERCADILLO	MER	1110	A	2016-10-14 11:41:16.627838-05	\N
-111055	VICENTINO	VIC	1110	A	2016-10-14 11:41:16.627838-05	\N
-111150	SARAGURO	SAR	1111	A	2016-10-14 11:41:16.627838-05	\N
-111151	EL PARAÍSO DE CELÉN	EL 	1111	A	2016-10-14 11:41:16.627838-05	\N
-111152	EL TABLÓN	EL 	1111	A	2016-10-14 11:41:16.627838-05	\N
-111153	LLUZHAPA	LLU	1111	A	2016-10-14 11:41:16.627838-05	\N
-111154	MANÚ	MAN	1111	A	2016-10-14 11:41:16.627838-05	\N
-111155	SAN ANTONIO DE QUMBE (CUMBE)	SAN	1111	A	2016-10-14 11:41:16.627838-05	\N
-111156	SAN PABLO DE TENTA	SAN	1111	A	2016-10-14 11:41:16.627838-05	\N
-111157	SAN SEBASTIÁN DE YÚLUC	SAN	1111	A	2016-10-14 11:41:16.627838-05	\N
-111158	SELVA ALEGRE	SEL	1111	A	2016-10-14 11:41:16.627838-05	\N
-111159	URDANETA (PAQUISHAPA)	URD	1111	A	2016-10-14 11:41:16.627838-05	\N
-111160	SUMAYPAMBA	SUM	1111	A	2016-10-14 11:41:16.627838-05	\N
-111250	SOZORANGA	SOZ	1112	A	2016-10-14 11:41:16.627838-05	\N
-111251	NUEVA FÁTIMA	NUE	1112	A	2016-10-14 11:41:16.627838-05	\N
-111252	TACAMOROS	TAC	1112	A	2016-10-14 11:41:16.627838-05	\N
-111350	ZAPOTILLO	ZAP	1113	A	2016-10-14 11:41:16.627838-05	\N
-111351	MANGAHURCO (CAZADEROS)	MAN	1113	A	2016-10-14 11:41:16.627838-05	\N
-111352	GARZAREAL	GAR	1113	A	2016-10-14 11:41:16.627838-05	\N
-111353	LIMONES	LIM	1113	A	2016-10-14 11:41:16.627838-05	\N
-111354	PALETILLAS	PAL	1113	A	2016-10-14 11:41:16.627838-05	\N
-111355	BOLASPAMBA	BOL	1113	A	2016-10-14 11:41:16.627838-05	\N
-111450	PINDAL	PIN	1114	A	2016-10-14 11:41:16.627838-05	\N
-111451	CHAQUINAL	CHA	1114	A	2016-10-14 11:41:16.627838-05	\N
-111452	12 DE DICIEMBRE (CAB.EN ACHIOTES)	12 	1114	A	2016-10-14 11:41:16.627838-05	\N
-111453	MILAGROS	MIL	1114	A	2016-10-14 11:41:16.627838-05	\N
-111550	QUILANGA	QUI	1115	A	2016-10-14 11:41:16.627838-05	\N
-111551	FUNDOCHAMBA	FUN	1115	A	2016-10-14 11:41:16.627838-05	\N
-111552	SAN ANTONIO DE LAS ARADAS (CAB. EN LAS ARADAS)	SAN	1115	A	2016-10-14 11:41:16.627838-05	\N
-111650	OLMEDO	OLM	1116	A	2016-10-14 11:41:16.627838-05	\N
-111651	LA TINGUE	LA 	1116	A	2016-10-14 11:41:16.627838-05	\N
-120101	CLEMENTE BAQUERIZO	CLE	1201	A	2016-10-14 11:41:16.627838-05	\N
-120102	DR. CAMILO PONCE	DR.	1201	A	2016-10-14 11:41:16.627838-05	\N
-120103	BARREIRO	BAR	1201	A	2016-10-14 11:41:16.627838-05	\N
-120104	EL SALTO	EL 	1201	A	2016-10-14 11:41:16.627838-05	\N
-120150	BABAHOYO	BAB	1201	A	2016-10-14 11:41:16.627838-05	\N
-120151	BARREIRO (SANTA RITA)	BAR	1201	A	2016-10-14 11:41:16.627838-05	\N
-120152	CARACOL	CAR	1201	A	2016-10-14 11:41:16.627838-05	\N
-120153	FEBRES CORDERO (LAS JUNTAS)	FEB	1201	A	2016-10-14 11:41:16.627838-05	\N
-120154	PIMOCHA	PIM	1201	A	2016-10-14 11:41:16.627838-05	\N
-120155	LA UNIÓN	LA 	1201	A	2016-10-14 11:41:16.627838-05	\N
-120250	BABA	BAB	1202	A	2016-10-14 11:41:16.627838-05	\N
-120251	GUARE	GUA	1202	A	2016-10-14 11:41:16.627838-05	\N
-120252	ISLA DE BEJUCAL	ISL	1202	A	2016-10-14 11:41:16.627838-05	\N
-120350	MONTALVO	MON	1203	A	2016-10-14 11:41:16.627838-05	\N
-120450	PUEBLOVIEJO	PUE	1204	A	2016-10-14 11:41:16.627838-05	\N
-120451	PUERTO PECHICHE	PUE	1204	A	2016-10-14 11:41:16.627838-05	\N
-120452	SAN JUAN	SAN	1204	A	2016-10-14 11:41:16.627838-05	\N
-120501	QUEVEDO	QUE	1205	A	2016-10-14 11:41:16.627838-05	\N
-120502	SAN CAMILO	SAN	1205	A	2016-10-14 11:41:16.627838-05	\N
-120503	SAN JOSÉ	SAN	1205	A	2016-10-14 11:41:16.627838-05	\N
-120504	GUAYACÁN	GUA	1205	A	2016-10-14 11:41:16.627838-05	\N
-120505	NICOLÁS INFANTE DÍAZ	NIC	1205	A	2016-10-14 11:41:16.627838-05	\N
-120506	SAN CRISTÓBAL	SAN	1205	A	2016-10-14 11:41:16.627838-05	\N
-120507	SIETE DE OCTUBRE	SIE	1205	A	2016-10-14 11:41:16.627838-05	\N
-120508	24 DE MAYO	24 	1205	A	2016-10-14 11:41:16.627838-05	\N
-120509	VENUS DEL RÍO QUEVEDO	VEN	1205	A	2016-10-14 11:41:16.627838-05	\N
-120510	VIVA ALFARO	VIV	1205	A	2016-10-14 11:41:16.627838-05	\N
-120550	QUEVEDO	QUE	1205	A	2016-10-14 11:41:16.627838-05	\N
-120551	BUENA FÉ	BUE	1205	A	2016-10-14 11:41:16.627838-05	\N
-120552	MOCACHE	MOC	1205	A	2016-10-14 11:41:16.627838-05	\N
-120553	SAN CARLOS	SAN	1205	A	2016-10-14 11:41:16.627838-05	\N
-120554	VALENCIA	VAL	1205	A	2016-10-14 11:41:16.627838-05	\N
-120555	LA ESPERANZA	LA 	1205	A	2016-10-14 11:41:16.627838-05	\N
-120650	CATARAMA	CAT	1206	A	2016-10-14 11:41:16.627838-05	\N
-120651	RICAURTE	RIC	1206	A	2016-10-14 11:41:16.627838-05	\N
-120701	10 DE NOVIEMBRE	10 	1207	A	2016-10-14 11:41:16.627838-05	\N
-120750	VENTANAS	VEN	1207	A	2016-10-14 11:41:16.627838-05	\N
-120751	QUINSALOMA	QUI	1207	A	2016-10-14 11:41:16.627838-05	\N
-120752	ZAPOTAL	ZAP	1207	A	2016-10-14 11:41:16.627838-05	\N
-120753	CHACARITA	CHA	1207	A	2016-10-14 11:41:16.627838-05	\N
-120754	LOS ÁNGELES	LOS	1207	A	2016-10-14 11:41:16.627838-05	\N
-120850	VINCES	VIN	1208	A	2016-10-14 11:41:16.627838-05	\N
-120851	ANTONIO SOTOMAYOR (CAB. EN PLAYAS DE VINCES)	ANT	1208	A	2016-10-14 11:41:16.627838-05	\N
-120852	PALENQUE	PAL	1208	A	2016-10-14 11:41:16.627838-05	\N
-120950	PALENQUE	PAL	1209	A	2016-10-14 11:41:16.627838-05	\N
-121001	SAN JACINTO DE BUENA FÉ	SAN	1210	A	2016-10-14 11:41:16.627838-05	\N
-121002	7 DE AGOSTO	7 D	1210	A	2016-10-14 11:41:16.627838-05	\N
-121003	11 DE OCTUBRE	11 	1210	A	2016-10-14 11:41:16.627838-05	\N
-121050	SAN JACINTO DE BUENA FÉ	SAN	1210	A	2016-10-14 11:41:16.627838-05	\N
-121051	PATRICIA PILAR	PAT	1210	A	2016-10-14 11:41:16.627838-05	\N
-121150	VALENCIA	VAL	1211	A	2016-10-14 11:41:16.627838-05	\N
-121250	MOCACHE	MOC	1212	A	2016-10-14 11:41:16.627838-05	\N
-121350	QUINSALOMA	QUI	1213	A	2016-10-14 11:41:16.627838-05	\N
-130101	PORTOVIEJO	POR	1301	A	2016-10-14 11:41:16.627838-05	\N
-130102	12 DE MARZO	12 	1301	A	2016-10-14 11:41:16.627838-05	\N
-130103	COLÓN	COL	1301	A	2016-10-14 11:41:16.627838-05	\N
-130104	PICOAZÁ	PIC	1301	A	2016-10-14 11:41:16.627838-05	\N
-130105	SAN PABLO	SAN	1301	A	2016-10-14 11:41:16.627838-05	\N
-130106	ANDRÉS DE VERA	AND	1301	A	2016-10-14 11:41:16.627838-05	\N
-130107	FRANCISCO PACHECO	FRA	1301	A	2016-10-14 11:41:16.627838-05	\N
-130108	18 DE OCTUBRE	18 	1301	A	2016-10-14 11:41:16.627838-05	\N
-130109	SIMÓN BOLÍVAR	SIM	1301	A	2016-10-14 11:41:16.627838-05	\N
-130150	PORTOVIEJO	POR	1301	A	2016-10-14 11:41:16.627838-05	\N
-130151	ABDÓN CALDERÓN (SAN FRANCISCO)	ABD	1301	A	2016-10-14 11:41:16.627838-05	\N
-130152	ALHAJUELA (BAJO GRANDE)	ALH	1301	A	2016-10-14 11:41:16.627838-05	\N
-130153	CRUCITA	CRU	1301	A	2016-10-14 11:41:16.627838-05	\N
-130154	PUEBLO NUEVO	PUE	1301	A	2016-10-14 11:41:16.627838-05	\N
-130155	RIOCHICO (RÍO CHICO)	RIO	1301	A	2016-10-14 11:41:16.627838-05	\N
-130156	SAN PLÁCIDO	SAN	1301	A	2016-10-14 11:41:16.627838-05	\N
-130157	CHIRIJOS	CHI	1301	A	2016-10-14 11:41:16.627838-05	\N
-130250	CALCETA	CAL	1302	A	2016-10-14 11:41:16.627838-05	\N
-130251	MEMBRILLO	MEM	1302	A	2016-10-14 11:41:16.627838-05	\N
-130252	QUIROGA	QUI	1302	A	2016-10-14 11:41:16.627838-05	\N
-130301	CHONE	CHO	1303	A	2016-10-14 11:41:16.627838-05	\N
-130302	SANTA RITA	SAN	1303	A	2016-10-14 11:41:16.627838-05	\N
-130350	CHONE	CHO	1303	A	2016-10-14 11:41:16.627838-05	\N
-130351	BOYACÁ	BOY	1303	A	2016-10-14 11:41:16.627838-05	\N
-130352	CANUTO	CAN	1303	A	2016-10-14 11:41:16.627838-05	\N
-130353	CONVENTO	CON	1303	A	2016-10-14 11:41:16.627838-05	\N
-130354	CHIBUNGA	CHI	1303	A	2016-10-14 11:41:16.627838-05	\N
-130355	ELOY ALFARO	ELO	1303	A	2016-10-14 11:41:16.627838-05	\N
-130356	RICAURTE	RIC	1303	A	2016-10-14 11:41:16.627838-05	\N
-130357	SAN ANTONIO	SAN	1303	A	2016-10-14 11:41:16.627838-05	\N
-130401	EL CARMEN	EL 	1304	A	2016-10-14 11:41:16.627838-05	\N
-130402	4 DE DICIEMBRE	4 D	1304	A	2016-10-14 11:41:16.627838-05	\N
-130450	EL CARMEN	EL 	1304	A	2016-10-14 11:41:16.627838-05	\N
-130451	WILFRIDO LOOR MOREIRA (MAICITO)	WIL	1304	A	2016-10-14 11:41:16.627838-05	\N
-130452	SAN PEDRO DE SUMA	SAN	1304	A	2016-10-14 11:41:16.627838-05	\N
-130550	FLAVIO ALFARO	FLA	1305	A	2016-10-14 11:41:16.627838-05	\N
-130551	SAN FRANCISCO DE NOVILLO (CAB. EN	SAN	1305	A	2016-10-14 11:41:16.627838-05	\N
-130552	ZAPALLO	ZAP	1305	A	2016-10-14 11:41:16.627838-05	\N
-130601	DR. MIGUEL MORÁN LUCIO	DR.	1306	A	2016-10-14 11:41:16.627838-05	\N
-130602	MANUEL INOCENCIO PARRALES Y GUALE	MAN	1306	A	2016-10-14 11:41:16.627838-05	\N
-130603	SAN LORENZO DE JIPIJAPA	SAN	1306	A	2016-10-14 11:41:16.627838-05	\N
-130650	JIPIJAPA	JIP	1306	A	2016-10-14 11:41:16.627838-05	\N
-130651	AMÉRICA	AMÉ	1306	A	2016-10-14 11:41:16.627838-05	\N
-130652	EL ANEGADO (CAB. EN ELOY ALFARO)	EL 	1306	A	2016-10-14 11:41:16.627838-05	\N
-130653	JULCUY	JUL	1306	A	2016-10-14 11:41:16.627838-05	\N
-130654	LA UNIÓN	LA 	1306	A	2016-10-14 11:41:16.627838-05	\N
-130655	MACHALILLA	MAC	1306	A	2016-10-14 11:41:16.627838-05	\N
-130656	MEMBRILLAL	MEM	1306	A	2016-10-14 11:41:16.627838-05	\N
-130657	PEDRO PABLO GÓMEZ	PED	1306	A	2016-10-14 11:41:16.627838-05	\N
-130658	PUERTO DE CAYO	PUE	1306	A	2016-10-14 11:41:16.627838-05	\N
-130659	PUERTO LÓPEZ	PUE	1306	A	2016-10-14 11:41:16.627838-05	\N
-130750	JUNÍN	JUN	1307	A	2016-10-14 11:41:16.627838-05	\N
-130801	LOS ESTEROS	LOS	1308	A	2016-10-14 11:41:16.627838-05	\N
-130802	MANTA	MAN	1308	A	2016-10-14 11:41:16.627838-05	\N
-130803	SAN MATEO	SAN	1308	A	2016-10-14 11:41:16.627838-05	\N
-130804	TARQUI	TAR	1308	A	2016-10-14 11:41:16.627838-05	\N
-130805	ELOY ALFARO	ELO	1308	A	2016-10-14 11:41:16.627838-05	\N
-130850	MANTA	MAN	1308	A	2016-10-14 11:41:16.627838-05	\N
-130851	SAN LORENZO	SAN	1308	A	2016-10-14 11:41:16.627838-05	\N
-130852	SANTA MARIANITA (BOCA DE PACOCHE)	SAN	1308	A	2016-10-14 11:41:16.627838-05	\N
-130901	ANIBAL SAN ANDRÉS	ANI	1309	A	2016-10-14 11:41:16.627838-05	\N
-130902	MONTECRISTI	MON	1309	A	2016-10-14 11:41:16.627838-05	\N
-130903	EL COLORADO	EL 	1309	A	2016-10-14 11:41:16.627838-05	\N
-130904	GENERAL ELOY ALFARO	GEN	1309	A	2016-10-14 11:41:16.627838-05	\N
-130905	LEONIDAS PROAÑO	LEO	1309	A	2016-10-14 11:41:16.627838-05	\N
-130950	MONTECRISTI	MON	1309	A	2016-10-14 11:41:16.627838-05	\N
-130951	JARAMIJÓ	JAR	1309	A	2016-10-14 11:41:16.627838-05	\N
-130952	LA PILA	LA 	1309	A	2016-10-14 11:41:16.627838-05	\N
-131050	PAJÁN	PAJ	1310	A	2016-10-14 11:41:16.627838-05	\N
-131051	CAMPOZANO (LA PALMA DE PAJÁN)	CAM	1310	A	2016-10-14 11:41:16.627838-05	\N
-131052	CASCOL	CAS	1310	A	2016-10-14 11:41:16.627838-05	\N
-131053	GUALE	GUA	1310	A	2016-10-14 11:41:16.627838-05	\N
-131054	LASCANO	LAS	1310	A	2016-10-14 11:41:16.627838-05	\N
-131150	PICHINCHA	PIC	1311	A	2016-10-14 11:41:16.627838-05	\N
-131151	BARRAGANETE	BAR	1311	A	2016-10-14 11:41:16.627838-05	\N
-131152	SAN SEBASTIÁN	SAN	1311	A	2016-10-14 11:41:16.627838-05	\N
-131250	ROCAFUERTE	ROC	1312	A	2016-10-14 11:41:16.627838-05	\N
-131301	SANTA ANA	SAN	1313	A	2016-10-14 11:41:16.627838-05	\N
-131302	LODANA	LOD	1313	A	2016-10-14 11:41:16.627838-05	\N
-131350	SANTA ANA DE VUELTA LARGA	SAN	1313	A	2016-10-14 11:41:16.627838-05	\N
-131351	AYACUCHO	AYA	1313	A	2016-10-14 11:41:16.627838-05	\N
-131352	HONORATO VÁSQUEZ (CAB. EN VÁSQUEZ)	HON	1313	A	2016-10-14 11:41:16.627838-05	\N
-131353	LA UNIÓN	LA 	1313	A	2016-10-14 11:41:16.627838-05	\N
-131354	OLMEDO	OLM	1313	A	2016-10-14 11:41:16.627838-05	\N
-131355	SAN PABLO (CAB. EN PUEBLO NUEVO)	SAN	1313	A	2016-10-14 11:41:16.627838-05	\N
-131401	BAHÍA DE CARÁQUEZ	BAH	1314	A	2016-10-14 11:41:16.627838-05	\N
-131402	LEONIDAS PLAZA GUTIÉRREZ	LEO	1314	A	2016-10-14 11:41:16.627838-05	\N
-131450	BAHÍA DE CARÁQUEZ	BAH	1314	A	2016-10-14 11:41:16.627838-05	\N
-131451	CANOA	CAN	1314	A	2016-10-14 11:41:16.627838-05	\N
-131452	COJIMÍES	COJ	1314	A	2016-10-14 11:41:16.627838-05	\N
-131453	CHARAPOTÓ	CHA	1314	A	2016-10-14 11:41:16.627838-05	\N
-131454	10 DE AGOSTO	10 	1314	A	2016-10-14 11:41:16.627838-05	\N
-131455	JAMA	JAM	1314	A	2016-10-14 11:41:16.627838-05	\N
-131456	PEDERNALES	PED	1314	A	2016-10-14 11:41:16.627838-05	\N
-131457	SAN ISIDRO	SAN	1314	A	2016-10-14 11:41:16.627838-05	\N
-131458	SAN VICENTE	SAN	1314	A	2016-10-14 11:41:16.627838-05	\N
-131550	TOSAGUA	TOS	1315	A	2016-10-14 11:41:16.627838-05	\N
-131551	BACHILLERO	BAC	1315	A	2016-10-14 11:41:16.627838-05	\N
-131552	ANGEL PEDRO GILER (LA ESTANCILLA)	ANG	1315	A	2016-10-14 11:41:16.627838-05	\N
-131650	SUCRE	SUC	1316	A	2016-10-14 11:41:16.627838-05	\N
-131651	BELLAVISTA	BEL	1316	A	2016-10-14 11:41:16.627838-05	\N
-131652	NOBOA	NOB	1316	A	2016-10-14 11:41:16.627838-05	\N
-131653	ARQ. SIXTO DURÁN BALLÉN	ARQ	1316	A	2016-10-14 11:41:16.627838-05	\N
-131750	PEDERNALES	PED	1317	A	2016-10-14 11:41:16.627838-05	\N
-131751	COJIMÍES	COJ	1317	A	2016-10-14 11:41:16.627838-05	\N
-131752	10 DE AGOSTO	10 	1317	A	2016-10-14 11:41:16.627838-05	\N
-131753	ATAHUALPA	ATA	1317	A	2016-10-14 11:41:16.627838-05	\N
-131850	OLMEDO	OLM	1318	A	2016-10-14 11:41:16.627838-05	\N
-131950	PUERTO LÓPEZ	PUE	1319	A	2016-10-14 11:41:16.627838-05	\N
-131951	MACHALILLA	MAC	1319	A	2016-10-14 11:41:16.627838-05	\N
-131952	SALANGO	SAL	1319	A	2016-10-14 11:41:16.627838-05	\N
-132050	JAMA	JAM	1320	A	2016-10-14 11:41:16.627838-05	\N
-132150	JARAMIJÓ	JAR	1321	A	2016-10-14 11:41:16.627838-05	\N
-132250	SAN VICENTE	SAN	1322	A	2016-10-14 11:41:16.627838-05	\N
-132251	CANOA	CAN	1322	A	2016-10-14 11:41:16.627838-05	\N
-140150	MACAS	MAC	1401	A	2016-10-14 11:41:16.627838-05	\N
-140151	ALSHI (CAB. EN 9 DE OCTUBRE)	ALS	1401	A	2016-10-14 11:41:16.627838-05	\N
-140152	CHIGUAZA	CHI	1401	A	2016-10-14 11:41:16.627838-05	\N
-140153	GENERAL PROAÑO	GEN	1401	A	2016-10-14 11:41:16.627838-05	\N
-140154	HUASAGA (CAB.EN WAMPUIK)	HUA	1401	A	2016-10-14 11:41:16.627838-05	\N
-140155	MACUMA	MAC	1401	A	2016-10-14 11:41:16.627838-05	\N
-140156	SAN ISIDRO	SAN	1401	A	2016-10-14 11:41:16.627838-05	\N
-140157	SEVILLA DON BOSCO	SEV	1401	A	2016-10-14 11:41:16.627838-05	\N
-140158	SINAÍ	SIN	1401	A	2016-10-14 11:41:16.627838-05	\N
-140159	TAISHA	TAI	1401	A	2016-10-14 11:41:16.627838-05	\N
-140160	ZUÑA (ZÚÑAC)	ZUÑ	1401	A	2016-10-14 11:41:16.627838-05	\N
-140161	TUUTINENTZA	TUU	1401	A	2016-10-14 11:41:16.627838-05	\N
-140162	CUCHAENTZA	CUC	1401	A	2016-10-14 11:41:16.627838-05	\N
-140163	SAN JOSÉ DE MORONA	SAN	1401	A	2016-10-14 11:41:16.627838-05	\N
-140164	RÍO BLANCO	RÍO	1401	A	2016-10-14 11:41:16.627838-05	\N
-140201	GUALAQUIZA	GUA	1402	A	2016-10-14 11:41:16.627838-05	\N
-140202	MERCEDES MOLINA	MER	1402	A	2016-10-14 11:41:16.627838-05	\N
-140250	GUALAQUIZA	GUA	1402	A	2016-10-14 11:41:16.627838-05	\N
-140251	AMAZONAS (ROSARIO DE CUYES)	AMA	1402	A	2016-10-14 11:41:16.627838-05	\N
-140252	BERMEJOS	BER	1402	A	2016-10-14 11:41:16.627838-05	\N
-140253	BOMBOIZA	BOM	1402	A	2016-10-14 11:41:16.627838-05	\N
-140254	CHIGÜINDA	CHI	1402	A	2016-10-14 11:41:16.627838-05	\N
-140255	EL ROSARIO	EL 	1402	A	2016-10-14 11:41:16.627838-05	\N
-140256	NUEVA TARQUI	NUE	1402	A	2016-10-14 11:41:16.627838-05	\N
-140257	SAN MIGUEL DE CUYES	SAN	1402	A	2016-10-14 11:41:16.627838-05	\N
-140258	EL IDEAL	EL 	1402	A	2016-10-14 11:41:16.627838-05	\N
-140350	GENERAL LEONIDAS PLAZA GUTIÉRREZ (LIMÓN)	GEN	1403	A	2016-10-14 11:41:16.627838-05	\N
-140351	INDANZA	IND	1403	A	2016-10-14 11:41:16.627838-05	\N
-140352	PAN DE AZÚCAR	PAN	1403	A	2016-10-14 11:41:16.627838-05	\N
-140353	SAN ANTONIO (CAB. EN SAN ANTONIO CENTRO	SAN	1403	A	2016-10-14 11:41:16.627838-05	\N
-140354	SAN CARLOS DE LIMÓN (SAN CARLOS DEL	SAN	1403	A	2016-10-14 11:41:16.627838-05	\N
-140355	SAN JUAN BOSCO	SAN	1403	A	2016-10-14 11:41:16.627838-05	\N
-140356	SAN MIGUEL DE CONCHAY	SAN	1403	A	2016-10-14 11:41:16.627838-05	\N
-140357	SANTA SUSANA DE CHIVIAZA (CAB. EN CHIVIAZA)	SAN	1403	A	2016-10-14 11:41:16.627838-05	\N
-140358	YUNGANZA (CAB. EN EL ROSARIO)	YUN	1403	A	2016-10-14 11:41:16.627838-05	\N
-140450	PALORA (METZERA)	PAL	1404	A	2016-10-14 11:41:16.627838-05	\N
-140451	ARAPICOS	ARA	1404	A	2016-10-14 11:41:16.627838-05	\N
-140452	CUMANDÁ (CAB. EN COLONIA AGRÍCOLA SEVILLA DEL ORO)	CUM	1404	A	2016-10-14 11:41:16.627838-05	\N
-140453	HUAMBOYA	HUA	1404	A	2016-10-14 11:41:16.627838-05	\N
-140454	SANGAY (CAB. EN NAYAMANACA)	SAN	1404	A	2016-10-14 11:41:16.627838-05	\N
-140550	SANTIAGO DE MÉNDEZ	SAN	1405	A	2016-10-14 11:41:16.627838-05	\N
-140551	COPAL	COP	1405	A	2016-10-14 11:41:16.627838-05	\N
-140552	CHUPIANZA	CHU	1405	A	2016-10-14 11:41:16.627838-05	\N
-140553	PATUCA	PAT	1405	A	2016-10-14 11:41:16.627838-05	\N
-140554	SAN LUIS DE EL ACHO (CAB. EN EL ACHO)	SAN	1405	A	2016-10-14 11:41:16.627838-05	\N
-140555	SANTIAGO	SAN	1405	A	2016-10-14 11:41:16.627838-05	\N
-140556	TAYUZA	TAY	1405	A	2016-10-14 11:41:16.627838-05	\N
-140557	SAN FRANCISCO DE CHINIMBIMI	SAN	1405	A	2016-10-14 11:41:16.627838-05	\N
-140650	SUCÚA	SUC	1406	A	2016-10-14 11:41:16.627838-05	\N
-140651	ASUNCIÓN	ASU	1406	A	2016-10-14 11:41:16.627838-05	\N
-140652	HUAMBI	HUA	1406	A	2016-10-14 11:41:16.627838-05	\N
-140653	LOGROÑO	LOG	1406	A	2016-10-14 11:41:16.627838-05	\N
-140654	YAUPI	YAU	1406	A	2016-10-14 11:41:16.627838-05	\N
-140655	SANTA MARIANITA DE JESÚS	SAN	1406	A	2016-10-14 11:41:16.627838-05	\N
-140750	HUAMBOYA	HUA	1407	A	2016-10-14 11:41:16.627838-05	\N
-140751	CHIGUAZA	CHI	1407	A	2016-10-14 11:41:16.627838-05	\N
-140752	PABLO SEXTO	PAB	1407	A	2016-10-14 11:41:16.627838-05	\N
-140850	SAN JUAN BOSCO	SAN	1408	A	2016-10-14 11:41:16.627838-05	\N
-140851	PAN DE AZÚCAR	PAN	1408	A	2016-10-14 11:41:16.627838-05	\N
-140852	SAN CARLOS DE LIMÓN	SAN	1408	A	2016-10-14 11:41:16.627838-05	\N
-140853	SAN JACINTO DE WAKAMBEIS	SAN	1408	A	2016-10-14 11:41:16.627838-05	\N
-140854	SANTIAGO DE PANANZA	SAN	1408	A	2016-10-14 11:41:16.627838-05	\N
-140950	TAISHA	TAI	1409	A	2016-10-14 11:41:16.627838-05	\N
-140951	HUASAGA (CAB. EN WAMPUIK)	HUA	1409	A	2016-10-14 11:41:16.627838-05	\N
-140952	MACUMA	MAC	1409	A	2016-10-14 11:41:16.627838-05	\N
-140953	TUUTINENTZA	TUU	1409	A	2016-10-14 11:41:16.627838-05	\N
-140954	PUMPUENTSA	PUM	1409	A	2016-10-14 11:41:16.627838-05	\N
-141050	LOGROÑO	LOG	1410	A	2016-10-14 11:41:16.627838-05	\N
-141051	YAUPI	YAU	1410	A	2016-10-14 11:41:16.627838-05	\N
-141052	SHIMPIS	SHI	1410	A	2016-10-14 11:41:16.627838-05	\N
-141150	PABLO SEXTO	PAB	1411	A	2016-10-14 11:41:16.627838-05	\N
-141250	SANTIAGO	SAN	1412	A	2016-10-14 11:41:16.627838-05	\N
-141251	SAN JOSÉ DE MORONA	SAN	1412	A	2016-10-14 11:41:16.627838-05	\N
-150150	TENA	TEN	1501	A	2016-10-14 11:41:16.627838-05	\N
-150151	AHUANO	AHU	1501	A	2016-10-14 11:41:16.627838-05	\N
-150152	CARLOS JULIO AROSEMENA TOLA (ZATZA-YACU)	CAR	1501	A	2016-10-14 11:41:16.627838-05	\N
-150153	CHONTAPUNTA	CHO	1501	A	2016-10-14 11:41:16.627838-05	\N
-150154	PANO	PAN	1501	A	2016-10-14 11:41:16.627838-05	\N
-150155	PUERTO MISAHUALLI	PUE	1501	A	2016-10-14 11:41:16.627838-05	\N
-150156	PUERTO NAPO	PUE	1501	A	2016-10-14 11:41:16.627838-05	\N
-150157	TÁLAG	TÁL	1501	A	2016-10-14 11:41:16.627838-05	\N
-150158	SAN JUAN DE MUYUNA	SAN	1501	A	2016-10-14 11:41:16.627838-05	\N
-150350	ARCHIDONA	ARC	1503	A	2016-10-14 11:41:16.627838-05	\N
-150351	AVILA	AVI	1503	A	2016-10-14 11:41:16.627838-05	\N
-150352	COTUNDO	COT	1503	A	2016-10-14 11:41:16.627838-05	\N
-150353	LORETO	LOR	1503	A	2016-10-14 11:41:16.627838-05	\N
-150354	SAN PABLO DE USHPAYACU	SAN	1503	A	2016-10-14 11:41:16.627838-05	\N
-150355	PUERTO MURIALDO	PUE	1503	A	2016-10-14 11:41:16.627838-05	\N
-150450	EL CHACO	EL 	1504	A	2016-10-14 11:41:16.627838-05	\N
-150451	GONZALO DíAZ DE PINEDA (EL BOMBÓN)	GON	1504	A	2016-10-14 11:41:16.627838-05	\N
-150452	LINARES	LIN	1504	A	2016-10-14 11:41:16.627838-05	\N
-150453	OYACACHI	OYA	1504	A	2016-10-14 11:41:16.627838-05	\N
-150454	SANTA ROSA	SAN	1504	A	2016-10-14 11:41:16.627838-05	\N
-150455	SARDINAS	SAR	1504	A	2016-10-14 11:41:16.627838-05	\N
-150750	BAEZA	BAE	1507	A	2016-10-14 11:41:16.627838-05	\N
-150751	COSANGA	COS	1507	A	2016-10-14 11:41:16.627838-05	\N
-150752	CUYUJA	CUY	1507	A	2016-10-14 11:41:16.627838-05	\N
-150753	PAPALLACTA	PAP	1507	A	2016-10-14 11:41:16.627838-05	\N
-150754	SAN FRANCISCO DE BORJA (VIRGILIO DÁVILA)	SAN	1507	A	2016-10-14 11:41:16.627838-05	\N
-150755	SAN JOSÉ DEL PAYAMINO	SAN	1507	A	2016-10-14 11:41:16.627838-05	\N
-150756	SUMACO	SUM	1507	A	2016-10-14 11:41:16.627838-05	\N
-150950	CARLOS JULIO AROSEMENA TOLA	CAR	1509	A	2016-10-14 11:41:16.627838-05	\N
-160150	PUYO	PUY	1601	A	2016-10-14 11:41:16.627838-05	\N
-160151	ARAJUNO	ARA	1601	A	2016-10-14 11:41:16.627838-05	\N
-160152	CANELOS	CAN	1601	A	2016-10-14 11:41:16.627838-05	\N
-160153	CURARAY	CUR	1601	A	2016-10-14 11:41:16.627838-05	\N
-160154	DIEZ DE AGOSTO	DIE	1601	A	2016-10-14 11:41:16.627838-05	\N
-160155	FÁTIMA	FÁT	1601	A	2016-10-14 11:41:16.627838-05	\N
-160156	MONTALVO (ANDOAS)	MON	1601	A	2016-10-14 11:41:16.627838-05	\N
-160157	POMONA	POM	1601	A	2016-10-14 11:41:16.627838-05	\N
-160158	RÍO CORRIENTES	RÍO	1601	A	2016-10-14 11:41:16.627838-05	\N
-160159	RÍO TIGRE	RÍO	1601	A	2016-10-14 11:41:16.627838-05	\N
-160160	SANTA CLARA	SAN	1601	A	2016-10-14 11:41:16.627838-05	\N
-160161	SARAYACU	SAR	1601	A	2016-10-14 11:41:16.627838-05	\N
-160162	SIMÓN BOLÍVAR (CAB. EN MUSHULLACTA)	SIM	1601	A	2016-10-14 11:41:16.627838-05	\N
-160163	TARQUI	TAR	1601	A	2016-10-14 11:41:16.627838-05	\N
-160164	TENIENTE HUGO ORTIZ	TEN	1601	A	2016-10-14 11:41:16.627838-05	\N
-160165	VERACRUZ (INDILLAMA) (CAB. EN INDILLAMA)	VER	1601	A	2016-10-14 11:41:16.627838-05	\N
-160166	EL TRIUNFO	EL 	1601	A	2016-10-14 11:41:16.627838-05	\N
-160250	MERA	MER	1602	A	2016-10-14 11:41:16.627838-05	\N
-160251	MADRE TIERRA	MAD	1602	A	2016-10-14 11:41:16.627838-05	\N
-160252	SHELL	SHE	1602	A	2016-10-14 11:41:16.627838-05	\N
-160350	SANTA CLARA	SAN	1603	A	2016-10-14 11:41:16.627838-05	\N
-160351	SAN JOSÉ	SAN	1603	A	2016-10-14 11:41:16.627838-05	\N
-160450	ARAJUNO	ARA	1604	A	2016-10-14 11:41:16.627838-05	\N
-160451	CURARAY	CUR	1604	A	2016-10-14 11:41:16.627838-05	\N
-170101	BELISARIO QUEVEDO	BEL	1701	A	2016-10-14 11:41:16.627838-05	\N
-170102	CARCELÉN	CAR	1701	A	2016-10-14 11:41:16.627838-05	\N
-170103	CENTRO HISTÓRICO	CEN	1701	A	2016-10-14 11:41:16.627838-05	\N
-170104	COCHAPAMBA	COC	1701	A	2016-10-14 11:41:16.627838-05	\N
-170105	COMITÉ DEL PUEBLO	COM	1701	A	2016-10-14 11:41:16.627838-05	\N
-170106	COTOCOLLAO	COT	1701	A	2016-10-14 11:41:16.627838-05	\N
-170107	CHILIBULO	CHI	1701	A	2016-10-14 11:41:16.627838-05	\N
-170108	CHILLOGALLO	CHI	1701	A	2016-10-14 11:41:16.627838-05	\N
-170109	CHIMBACALLE	CHI	1701	A	2016-10-14 11:41:16.627838-05	\N
-170110	EL CONDADO	EL 	1701	A	2016-10-14 11:41:16.627838-05	\N
-170111	GUAMANÍ	GUA	1701	A	2016-10-14 11:41:16.627838-05	\N
-170112	IÑAQUITO	IÑA	1701	A	2016-10-14 11:41:16.627838-05	\N
-170113	ITCHIMBÍA	ITC	1701	A	2016-10-14 11:41:16.627838-05	\N
-170114	JIPIJAPA	JIP	1701	A	2016-10-14 11:41:16.627838-05	\N
-170115	KENNEDY	KEN	1701	A	2016-10-14 11:41:16.627838-05	\N
-170116	LA ARGELIA	LA 	1701	A	2016-10-14 11:41:16.627838-05	\N
-170117	LA CONCEPCIÓN	LA 	1701	A	2016-10-14 11:41:16.627838-05	\N
-170118	LA ECUATORIANA	LA 	1701	A	2016-10-14 11:41:16.627838-05	\N
-170119	LA FERROVIARIA	LA 	1701	A	2016-10-14 11:41:16.627838-05	\N
-170120	LA LIBERTAD	LA 	1701	A	2016-10-14 11:41:16.627838-05	\N
-170121	LA MAGDALENA	LA 	1701	A	2016-10-14 11:41:16.627838-05	\N
-170122	LA MENA	LA 	1701	A	2016-10-14 11:41:16.627838-05	\N
-170123	MARISCAL SUCRE	MAR	1701	A	2016-10-14 11:41:16.627838-05	\N
-170124	PONCEANO	PON	1701	A	2016-10-14 11:41:16.627838-05	\N
-170125	PUENGASÍ	PUE	1701	A	2016-10-14 11:41:16.627838-05	\N
-170126	QUITUMBE	QUI	1701	A	2016-10-14 11:41:16.627838-05	\N
-170127	RUMIPAMBA	RUM	1701	A	2016-10-14 11:41:16.627838-05	\N
-170128	SAN BARTOLO	SAN	1701	A	2016-10-14 11:41:16.627838-05	\N
-170129	SAN ISIDRO DEL INCA	SAN	1701	A	2016-10-14 11:41:16.627838-05	\N
-170130	SAN JUAN	SAN	1701	A	2016-10-14 11:41:16.627838-05	\N
-170131	SOLANDA	SOL	1701	A	2016-10-14 11:41:16.627838-05	\N
-170132	TURUBAMBA	TUR	1701	A	2016-10-14 11:41:16.627838-05	\N
-170150	QUITO DISTRITO METROPOLITANO	QUI	1701	A	2016-10-14 11:41:16.627838-05	\N
-170151	ALANGASÍ	ALA	1701	A	2016-10-14 11:41:16.627838-05	\N
-170152	AMAGUAÑA	AMA	1701	A	2016-10-14 11:41:16.627838-05	\N
-170153	ATAHUALPA	ATA	1701	A	2016-10-14 11:41:16.627838-05	\N
-170154	CALACALÍ	CAL	1701	A	2016-10-14 11:41:16.627838-05	\N
-170155	CALDERÓN	CAL	1701	A	2016-10-14 11:41:16.627838-05	\N
-170156	CONOCOTO	CON	1701	A	2016-10-14 11:41:16.627838-05	\N
-170157	CUMBAYÁ	CUM	1701	A	2016-10-14 11:41:16.627838-05	\N
-170158	CHAVEZPAMBA	CHA	1701	A	2016-10-14 11:41:16.627838-05	\N
-170159	CHECA	CHE	1701	A	2016-10-14 11:41:16.627838-05	\N
-170160	EL QUINCHE	EL 	1701	A	2016-10-14 11:41:16.627838-05	\N
-170161	GUALEA	GUA	1701	A	2016-10-14 11:41:16.627838-05	\N
-170162	GUANGOPOLO	GUA	1701	A	2016-10-14 11:41:16.627838-05	\N
-170163	GUAYLLABAMBA	GUA	1701	A	2016-10-14 11:41:16.627838-05	\N
-170164	LA MERCED	LA 	1701	A	2016-10-14 11:41:16.627838-05	\N
-170165	LLANO CHICO	LLA	1701	A	2016-10-14 11:41:16.627838-05	\N
-170166	LLOA	LLO	1701	A	2016-10-14 11:41:16.627838-05	\N
-170167	MINDO	MIN	1701	A	2016-10-14 11:41:16.627838-05	\N
-170168	NANEGAL	NAN	1701	A	2016-10-14 11:41:16.627838-05	\N
-170169	NANEGALITO	NAN	1701	A	2016-10-14 11:41:16.627838-05	\N
-170170	NAYÓN	NAY	1701	A	2016-10-14 11:41:16.627838-05	\N
-170171	NONO	NON	1701	A	2016-10-14 11:41:16.627838-05	\N
-170172	PACTO	PAC	1701	A	2016-10-14 11:41:16.627838-05	\N
-170173	PEDRO VICENTE MALDONADO	PED	1701	A	2016-10-14 11:41:16.627838-05	\N
-170174	PERUCHO	PER	1701	A	2016-10-14 11:41:16.627838-05	\N
-170175	PIFO	PIF	1701	A	2016-10-14 11:41:16.627838-05	\N
-170176	PÍNTAG	PÍN	1701	A	2016-10-14 11:41:16.627838-05	\N
-170177	POMASQUI	POM	1701	A	2016-10-14 11:41:16.627838-05	\N
-170178	PUÉLLARO	PUÉ	1701	A	2016-10-14 11:41:16.627838-05	\N
-170179	PUEMBO	PUE	1701	A	2016-10-14 11:41:16.627838-05	\N
-170180	SAN ANTONIO	SAN	1701	A	2016-10-14 11:41:16.627838-05	\N
-170181	SAN JOSÉ DE MINAS	SAN	1701	A	2016-10-14 11:41:16.627838-05	\N
-170182	SAN MIGUEL DE LOS BANCOS	SAN	1701	A	2016-10-14 11:41:16.627838-05	\N
-170183	TABABELA	TAB	1701	A	2016-10-14 11:41:16.627838-05	\N
-170184	TUMBACO	TUM	1701	A	2016-10-14 11:41:16.627838-05	\N
-170185	YARUQUÍ	YAR	1701	A	2016-10-14 11:41:16.627838-05	\N
-170186	ZAMBIZA	ZAM	1701	A	2016-10-14 11:41:16.627838-05	\N
-170187	PUERTO QUITO	PUE	1701	A	2016-10-14 11:41:16.627838-05	\N
-170201	AYORA	AYO	1702	A	2016-10-14 11:41:16.627838-05	\N
-170202	CAYAMBE	CAY	1702	A	2016-10-14 11:41:16.627838-05	\N
-170203	JUAN MONTALVO	JUA	1702	A	2016-10-14 11:41:16.627838-05	\N
-170250	CAYAMBE	CAY	1702	A	2016-10-14 11:41:16.627838-05	\N
-170251	ASCÁZUBI	ASC	1702	A	2016-10-14 11:41:16.627838-05	\N
-170252	CANGAHUA	CAN	1702	A	2016-10-14 11:41:16.627838-05	\N
-170253	OLMEDO (PESILLO)	OLM	1702	A	2016-10-14 11:41:16.627838-05	\N
-170254	OTÓN	OTÓ	1702	A	2016-10-14 11:41:16.627838-05	\N
-170255	SANTA ROSA DE CUZUBAMBA	SAN	1702	A	2016-10-14 11:41:16.627838-05	\N
-170350	MACHACHI	MAC	1703	A	2016-10-14 11:41:16.627838-05	\N
-170351	ALÓAG	ALÓ	1703	A	2016-10-14 11:41:16.627838-05	\N
-170352	ALOASÍ	ALO	1703	A	2016-10-14 11:41:16.627838-05	\N
-170353	CUTUGLAHUA	CUT	1703	A	2016-10-14 11:41:16.627838-05	\N
-170354	EL CHAUPI	EL 	1703	A	2016-10-14 11:41:16.627838-05	\N
-170355	MANUEL CORNEJO ASTORGA (TANDAPI)	MAN	1703	A	2016-10-14 11:41:16.627838-05	\N
-170356	TAMBILLO	TAM	1703	A	2016-10-14 11:41:16.627838-05	\N
-170357	UYUMBICHO	UYU	1703	A	2016-10-14 11:41:16.627838-05	\N
-170450	TABACUNDO	TAB	1704	A	2016-10-14 11:41:16.627838-05	\N
-170451	LA ESPERANZA	LA 	1704	A	2016-10-14 11:41:16.627838-05	\N
-170452	MALCHINGUÍ	MAL	1704	A	2016-10-14 11:41:16.627838-05	\N
-170453	TOCACHI	TOC	1704	A	2016-10-14 11:41:16.627838-05	\N
-170454	TUPIGACHI	TUP	1704	A	2016-10-14 11:41:16.627838-05	\N
-170501	SANGOLQUÍ	SAN	1705	A	2016-10-14 11:41:16.627838-05	\N
-170502	SAN PEDRO DE TABOADA	SAN	1705	A	2016-10-14 11:41:16.627838-05	\N
-170503	SAN RAFAEL	SAN	1705	A	2016-10-14 11:41:16.627838-05	\N
-170550	SANGOLQUI	SAN	1705	A	2016-10-14 11:41:16.627838-05	\N
-170551	COTOGCHOA	COT	1705	A	2016-10-14 11:41:16.627838-05	\N
-170552	RUMIPAMBA	RUM	1705	A	2016-10-14 11:41:16.627838-05	\N
-170750	SAN MIGUEL DE LOS BANCOS	SAN	1707	A	2016-10-14 11:41:16.627838-05	\N
-170751	MINDO	MIN	1707	A	2016-10-14 11:41:16.627838-05	\N
-170752	PEDRO VICENTE MALDONADO	PED	1707	A	2016-10-14 11:41:16.627838-05	\N
-170753	PUERTO QUITO	PUE	1707	A	2016-10-14 11:41:16.627838-05	\N
-170850	PEDRO VICENTE MALDONADO	PED	1708	A	2016-10-14 11:41:16.627838-05	\N
-170950	PUERTO QUITO	PUE	1709	A	2016-10-14 11:41:16.627838-05	\N
-180101	ATOCHA – FICOA	ATO	1801	A	2016-10-14 11:41:16.627838-05	\N
-180102	CELIANO MONGE	CEL	1801	A	2016-10-14 11:41:16.627838-05	\N
-180103	HUACHI CHICO	HUA	1801	A	2016-10-14 11:41:16.627838-05	\N
-180104	HUACHI LORETO	HUA	1801	A	2016-10-14 11:41:16.627838-05	\N
-180105	LA MERCED	LA 	1801	A	2016-10-14 11:41:16.627838-05	\N
-180106	LA PENÍNSULA	LA 	1801	A	2016-10-14 11:41:16.627838-05	\N
-180107	MATRIZ	MAT	1801	A	2016-10-14 11:41:16.627838-05	\N
-180108	PISHILATA	PIS	1801	A	2016-10-14 11:41:16.627838-05	\N
-180109	SAN FRANCISCO	SAN	1801	A	2016-10-14 11:41:16.627838-05	\N
-180150	AMBATO	AMB	1801	A	2016-10-14 11:41:16.627838-05	\N
-180151	AMBATILLO	AMB	1801	A	2016-10-14 11:41:16.627838-05	\N
-180152	ATAHUALPA (CHISALATA)	ATA	1801	A	2016-10-14 11:41:16.627838-05	\N
-180153	AUGUSTO N. MARTÍNEZ (MUNDUGLEO)	AUG	1801	A	2016-10-14 11:41:16.627838-05	\N
-180154	CONSTANTINO FERNÁNDEZ (CAB. EN CULLITAHUA)	CON	1801	A	2016-10-14 11:41:16.627838-05	\N
-180155	HUACHI GRANDE	HUA	1801	A	2016-10-14 11:41:16.627838-05	\N
-180156	IZAMBA	IZA	1801	A	2016-10-14 11:41:16.627838-05	\N
-180157	JUAN BENIGNO VELA	JUA	1801	A	2016-10-14 11:41:16.627838-05	\N
-180158	MONTALVO	MON	1801	A	2016-10-14 11:41:16.627838-05	\N
-180159	PASA	PAS	1801	A	2016-10-14 11:41:16.627838-05	\N
-180160	PICAIGUA	PIC	1801	A	2016-10-14 11:41:16.627838-05	\N
-180161	PILAGÜÍN (PILAHÜÍN)	PIL	1801	A	2016-10-14 11:41:16.627838-05	\N
-180162	QUISAPINCHA (QUIZAPINCHA)	QUI	1801	A	2016-10-14 11:41:16.627838-05	\N
-180163	SAN BARTOLOMÉ DE PINLLOG	SAN	1801	A	2016-10-14 11:41:16.627838-05	\N
-180164	SAN FERNANDO (PASA SAN FERNANDO)	SAN	1801	A	2016-10-14 11:41:16.627838-05	\N
-180165	SANTA ROSA	SAN	1801	A	2016-10-14 11:41:16.627838-05	\N
-180166	TOTORAS	TOT	1801	A	2016-10-14 11:41:16.627838-05	\N
-180167	CUNCHIBAMBA	CUN	1801	A	2016-10-14 11:41:16.627838-05	\N
-180168	UNAMUNCHO	UNA	1801	A	2016-10-14 11:41:16.627838-05	\N
-180250	BAÑOS DE AGUA SANTA	BAÑ	1802	A	2016-10-14 11:41:16.627838-05	\N
-180251	LLIGUA	LLI	1802	A	2016-10-14 11:41:16.627838-05	\N
-180252	RÍO NEGRO	RÍO	1802	A	2016-10-14 11:41:16.627838-05	\N
-180253	RÍO VERDE	RÍO	1802	A	2016-10-14 11:41:16.627838-05	\N
-180254	ULBA	ULB	1802	A	2016-10-14 11:41:16.627838-05	\N
-180350	CEVALLOS	CEV	1803	A	2016-10-14 11:41:16.627838-05	\N
-180450	MOCHA	MOC	1804	A	2016-10-14 11:41:16.627838-05	\N
-180451	PINGUILÍ	PIN	1804	A	2016-10-14 11:41:16.627838-05	\N
-180550	PATATE	PAT	1805	A	2016-10-14 11:41:16.627838-05	\N
-180551	EL TRIUNFO	EL 	1805	A	2016-10-14 11:41:16.627838-05	\N
-180552	LOS ANDES (CAB. EN POATUG)	LOS	1805	A	2016-10-14 11:41:16.627838-05	\N
-180553	SUCRE (CAB. EN SUCRE-PATATE URCU)	SUC	1805	A	2016-10-14 11:41:16.627838-05	\N
-180650	QUERO	QUE	1806	A	2016-10-14 11:41:16.627838-05	\N
-180651	RUMIPAMBA	RUM	1806	A	2016-10-14 11:41:16.627838-05	\N
-180652	YANAYACU - MOCHAPATA (CAB. EN YANAYACU)	YAN	1806	A	2016-10-14 11:41:16.627838-05	\N
-180701	PELILEO	PEL	1807	A	2016-10-14 11:41:16.627838-05	\N
-180702	PELILEO GRANDE	PEL	1807	A	2016-10-14 11:41:16.627838-05	\N
-180750	PELILEO	PEL	1807	A	2016-10-14 11:41:16.627838-05	\N
-180751	BENÍTEZ (PACHANLICA)	BEN	1807	A	2016-10-14 11:41:16.627838-05	\N
-180752	BOLÍVAR	BOL	1807	A	2016-10-14 11:41:16.627838-05	\N
-180753	COTALÓ	COT	1807	A	2016-10-14 11:41:16.627838-05	\N
-180754	CHIQUICHA (CAB. EN CHIQUICHA GRANDE)	CHI	1807	A	2016-10-14 11:41:16.627838-05	\N
-180755	EL ROSARIO (RUMICHACA)	EL 	1807	A	2016-10-14 11:41:16.627838-05	\N
-180756	GARCÍA MORENO (CHUMAQUI)	GAR	1807	A	2016-10-14 11:41:16.627838-05	\N
-180757	GUAMBALÓ (HUAMBALÓ)	GUA	1807	A	2016-10-14 11:41:16.627838-05	\N
-180758	SALASACA	SAL	1807	A	2016-10-14 11:41:16.627838-05	\N
-180801	CIUDAD NUEVA	CIU	1808	A	2016-10-14 11:41:16.627838-05	\N
-180802	PÍLLARO	PÍL	1808	A	2016-10-14 11:41:16.627838-05	\N
-180850	PÍLLARO	PÍL	1808	A	2016-10-14 11:41:16.627838-05	\N
-180851	BAQUERIZO MORENO	BAQ	1808	A	2016-10-14 11:41:16.627838-05	\N
-180852	EMILIO MARÍA TERÁN (RUMIPAMBA)	EMI	1808	A	2016-10-14 11:41:16.627838-05	\N
-180853	MARCOS ESPINEL (CHACATA)	MAR	1808	A	2016-10-14 11:41:16.627838-05	\N
-180854	PRESIDENTE URBINA (CHAGRAPAMBA -PATZUCUL)	PRE	1808	A	2016-10-14 11:41:16.627838-05	\N
-180855	SAN ANDRÉS	SAN	1808	A	2016-10-14 11:41:16.627838-05	\N
-180856	SAN JOSÉ DE POALÓ	SAN	1808	A	2016-10-14 11:41:16.627838-05	\N
-180857	SAN MIGUELITO	SAN	1808	A	2016-10-14 11:41:16.627838-05	\N
-180950	TISALEO	TIS	1809	A	2016-10-14 11:41:16.627838-05	\N
-180951	QUINCHICOTO	QUI	1809	A	2016-10-14 11:41:16.627838-05	\N
-190101	EL LIMÓN	EL 	1901	A	2016-10-14 11:41:16.627838-05	\N
-190102	ZAMORA	ZAM	1901	A	2016-10-14 11:41:16.627838-05	\N
-190150	ZAMORA	ZAM	1901	A	2016-10-14 11:41:16.627838-05	\N
-190151	CUMBARATZA	CUM	1901	A	2016-10-14 11:41:16.627838-05	\N
-190152	GUADALUPE	GUA	1901	A	2016-10-14 11:41:16.627838-05	\N
-190153	IMBANA (LA VICTORIA DE IMBANA)	IMB	1901	A	2016-10-14 11:41:16.627838-05	\N
-190154	PAQUISHA	PAQ	1901	A	2016-10-14 11:41:16.627838-05	\N
-190155	SABANILLA	SAB	1901	A	2016-10-14 11:41:16.627838-05	\N
-190156	TIMBARA	TIM	1901	A	2016-10-14 11:41:16.627838-05	\N
-190157	ZUMBI	ZUM	1901	A	2016-10-14 11:41:16.627838-05	\N
-190158	SAN CARLOS DE LAS MINAS	SAN	1901	A	2016-10-14 11:41:16.627838-05	\N
-190250	ZUMBA	ZUM	1902	A	2016-10-14 11:41:16.627838-05	\N
-190251	CHITO	CHI	1902	A	2016-10-14 11:41:16.627838-05	\N
-190252	EL CHORRO	EL 	1902	A	2016-10-14 11:41:16.627838-05	\N
-190253	EL PORVENIR DEL CARMEN	EL 	1902	A	2016-10-14 11:41:16.627838-05	\N
-190254	LA CHONTA	LA 	1902	A	2016-10-14 11:41:16.627838-05	\N
-190255	PALANDA	PAL	1902	A	2016-10-14 11:41:16.627838-05	\N
-190256	PUCAPAMBA	PUC	1902	A	2016-10-14 11:41:16.627838-05	\N
-190257	SAN FRANCISCO DEL VERGEL	SAN	1902	A	2016-10-14 11:41:16.627838-05	\N
-190258	VALLADOLID	VAL	1902	A	2016-10-14 11:41:16.627838-05	\N
-190259	SAN ANDRÉS	SAN	1902	A	2016-10-14 11:41:16.627838-05	\N
-190350	GUAYZIMI	GUA	1903	A	2016-10-14 11:41:16.627838-05	\N
-190351	ZURMI	ZUR	1903	A	2016-10-14 11:41:16.627838-05	\N
-190352	NUEVO PARAÍSO	NUE	1903	A	2016-10-14 11:41:16.627838-05	\N
-190450	28 DE MAYO (SAN JOSÉ DE YACUAMBI)	28 	1904	A	2016-10-14 11:41:16.627838-05	\N
-190451	LA PAZ	LA 	1904	A	2016-10-14 11:41:16.627838-05	\N
-190452	TUTUPALI	TUT	1904	A	2016-10-14 11:41:16.627838-05	\N
-190550	YANTZAZA (YANZATZA)	YAN	1905	A	2016-10-14 11:41:16.627838-05	\N
-190551	CHICAÑA	CHI	1905	A	2016-10-14 11:41:16.627838-05	\N
-190552	EL PANGUI	EL 	1905	A	2016-10-14 11:41:16.627838-05	\N
-190553	LOS ENCUENTROS	LOS	1905	A	2016-10-14 11:41:16.627838-05	\N
-190650	EL PANGUI	EL 	1906	A	2016-10-14 11:41:16.627838-05	\N
-190651	EL GUISME	EL 	1906	A	2016-10-14 11:41:16.627838-05	\N
-190652	PACHICUTZA	PAC	1906	A	2016-10-14 11:41:16.627838-05	\N
-190653	TUNDAYME	TUN	1906	A	2016-10-14 11:41:16.627838-05	\N
-190750	ZUMBI	ZUM	1907	A	2016-10-14 11:41:16.627838-05	\N
-190751	PAQUISHA	PAQ	1907	A	2016-10-14 11:41:16.627838-05	\N
-190752	TRIUNFO-DORADO	TRI	1907	A	2016-10-14 11:41:16.627838-05	\N
-190753	PANGUINTZA	PAN	1907	A	2016-10-14 11:41:16.627838-05	\N
-190850	PALANDA	PAL	1908	A	2016-10-14 11:41:16.627838-05	\N
-190851	EL PORVENIR DEL CARMEN	EL 	1908	A	2016-10-14 11:41:16.627838-05	\N
-190852	SAN FRANCISCO DEL VERGEL	SAN	1908	A	2016-10-14 11:41:16.627838-05	\N
-190853	VALLADOLID	VAL	1908	A	2016-10-14 11:41:16.627838-05	\N
-190854	LA CANELA	LA 	1908	A	2016-10-14 11:41:16.627838-05	\N
-190950	PAQUISHA	PAQ	1909	A	2016-10-14 11:41:16.627838-05	\N
-190951	BELLAVISTA	BEL	1909	A	2016-10-14 11:41:16.627838-05	\N
-190952	NUEVO QUITO	NUE	1909	A	2016-10-14 11:41:16.627838-05	\N
-200150	PUERTO BAQUERIZO MORENO	PUE	2001	A	2016-10-14 11:41:16.627838-05	\N
-200151	EL PROGRESO	EL 	2001	A	2016-10-14 11:41:16.627838-05	\N
-200152	ISLA SANTA MARÍA (FLOREANA) (CAB. EN PTO. VELASCO IBARRA)	ISL	2001	A	2016-10-14 11:41:16.627838-05	\N
-200250	PUERTO VILLAMIL	PUE	2002	A	2016-10-14 11:41:16.627838-05	\N
-200251	TOMÁS DE BERLANGA (SANTO TOMÁS)	TOM	2002	A	2016-10-14 11:41:16.627838-05	\N
-200350	PUERTO AYORA	PUE	2003	A	2016-10-14 11:41:16.627838-05	\N
-200351	BELLAVISTA	BEL	2003	A	2016-10-14 11:41:16.627838-05	\N
-200352	SANTA ROSA (INCLUYE LA ISLA BALTRA)	SAN	2003	A	2016-10-14 11:41:16.627838-05	\N
-210150	NUEVA LOJA	NUE	2101	A	2016-10-14 11:41:16.627838-05	\N
-210151	CUYABENO	CUY	2101	A	2016-10-14 11:41:16.627838-05	\N
-210152	DURENO	DUR	2101	A	2016-10-14 11:41:16.627838-05	\N
-210153	GENERAL FARFÁN	GEN	2101	A	2016-10-14 11:41:16.627838-05	\N
-210154	TARAPOA	TAR	2101	A	2016-10-14 11:41:16.627838-05	\N
-210155	EL ENO	EL 	2101	A	2016-10-14 11:41:16.627838-05	\N
-210156	PACAYACU	PAC	2101	A	2016-10-14 11:41:16.627838-05	\N
-210157	JAMBELÍ	JAM	2101	A	2016-10-14 11:41:16.627838-05	\N
-210158	SANTA CECILIA	SAN	2101	A	2016-10-14 11:41:16.627838-05	\N
-210159	AGUAS NEGRAS	AGU	2101	A	2016-10-14 11:41:16.627838-05	\N
-210250	EL DORADO DE CASCALES	EL 	2102	A	2016-10-14 11:41:16.627838-05	\N
-210251	EL REVENTADOR	EL 	2102	A	2016-10-14 11:41:16.627838-05	\N
-210252	GONZALO PIZARRO	GON	2102	A	2016-10-14 11:41:16.627838-05	\N
-210253	LUMBAQUÍ	LUM	2102	A	2016-10-14 11:41:16.627838-05	\N
-210254	PUERTO LIBRE	PUE	2102	A	2016-10-14 11:41:16.627838-05	\N
-210255	SANTA ROSA DE SUCUMBÍOS	SAN	2102	A	2016-10-14 11:41:16.627838-05	\N
-210350	PUERTO EL CARMEN DEL PUTUMAYO	PUE	2103	A	2016-10-14 11:41:16.627838-05	\N
-210351	PALMA ROJA	PAL	2103	A	2016-10-14 11:41:16.627838-05	\N
-210352	PUERTO BOLÍVAR (PUERTO MONTÚFAR)	PUE	2103	A	2016-10-14 11:41:16.627838-05	\N
-210353	PUERTO RODRÍGUEZ	PUE	2103	A	2016-10-14 11:41:16.627838-05	\N
-210354	SANTA ELENA	SAN	2103	A	2016-10-14 11:41:16.627838-05	\N
-210450	SHUSHUFINDI	SHU	2104	A	2016-10-14 11:41:16.627838-05	\N
-210451	LIMONCOCHA	LIM	2104	A	2016-10-14 11:41:16.627838-05	\N
-210452	PAÑACOCHA	PAÑ	2104	A	2016-10-14 11:41:16.627838-05	\N
-210453	SAN ROQUE (CAB. EN SAN VICENTE)	SAN	2104	A	2016-10-14 11:41:16.627838-05	\N
-210454	SAN PEDRO DE LOS COFANES	SAN	2104	A	2016-10-14 11:41:16.627838-05	\N
-210455	SIETE DE JULIO	SIE	2104	A	2016-10-14 11:41:16.627838-05	\N
-210550	LA BONITA	LA 	2105	A	2016-10-14 11:41:16.627838-05	\N
-210551	EL PLAYÓN DE SAN FRANCISCO	EL 	2105	A	2016-10-14 11:41:16.627838-05	\N
-210552	LA SOFÍA	LA 	2105	A	2016-10-14 11:41:16.627838-05	\N
-210553	ROSA FLORIDA	ROS	2105	A	2016-10-14 11:41:16.627838-05	\N
-210554	SANTA BÁRBARA	SAN	2105	A	2016-10-14 11:41:16.627838-05	\N
-210650	EL DORADO DE CASCALES	EL 	2106	A	2016-10-14 11:41:16.627838-05	\N
-210651	SANTA ROSA DE SUCUMBÍOS	SAN	2106	A	2016-10-14 11:41:16.627838-05	\N
-210652	SEVILLA	SEV	2106	A	2016-10-14 11:41:16.627838-05	\N
-210750	TARAPOA	TAR	2107	A	2016-10-14 11:41:16.627838-05	\N
-210751	CUYABENO	CUY	2107	A	2016-10-14 11:41:16.627838-05	\N
-210752	AGUAS NEGRAS	AGU	2107	A	2016-10-14 11:41:16.627838-05	\N
-220150	PUERTO FRANCISCO DE ORELLANA (EL COCA)	PUE	2201	A	2016-10-14 11:41:16.627838-05	\N
-220151	DAYUMA	DAY	2201	A	2016-10-14 11:41:16.627838-05	\N
-220152	TARACOA (NUEVA ESPERANZA: YUCA)	TAR	2201	A	2016-10-14 11:41:16.627838-05	\N
-220153	ALEJANDRO LABAKA	ALE	2201	A	2016-10-14 11:41:16.627838-05	\N
-220154	EL DORADO	EL 	2201	A	2016-10-14 11:41:16.627838-05	\N
-220155	EL EDÉN	EL 	2201	A	2016-10-14 11:41:16.627838-05	\N
-220156	GARCÍA MORENO	GAR	2201	A	2016-10-14 11:41:16.627838-05	\N
-220157	INÉS ARANGO (CAB. EN WESTERN)	INÉ	2201	A	2016-10-14 11:41:16.627838-05	\N
-220158	LA BELLEZA	LA 	2201	A	2016-10-14 11:41:16.627838-05	\N
-220159	NUEVO PARAÍSO (CAB. EN UNIÓN	NUE	2201	A	2016-10-14 11:41:16.627838-05	\N
-220160	SAN JOSÉ DE GUAYUSA	SAN	2201	A	2016-10-14 11:41:16.627838-05	\N
-220161	SAN LUIS DE ARMENIA	SAN	2201	A	2016-10-14 11:41:16.627838-05	\N
-220201	TIPITINI	TIP	2202	A	2016-10-14 11:41:16.627838-05	\N
-220250	NUEVO ROCAFUERTE	NUE	2202	A	2016-10-14 11:41:16.627838-05	\N
-220251	CAPITÁN AUGUSTO RIVADENEYRA	CAP	2202	A	2016-10-14 11:41:16.627838-05	\N
-220252	CONONACO	CON	2202	A	2016-10-14 11:41:16.627838-05	\N
-220253	SANTA MARÍA DE HUIRIRIMA	SAN	2202	A	2016-10-14 11:41:16.627838-05	\N
-220254	TIPUTINI	TIP	2202	A	2016-10-14 11:41:16.627838-05	\N
-220255	YASUNÍ	YAS	2202	A	2016-10-14 11:41:16.627838-05	\N
-220350	LA JOYA DE LOS SACHAS	LA 	2203	A	2016-10-14 11:41:16.627838-05	\N
-220351	ENOKANQUI	ENO	2203	A	2016-10-14 11:41:16.627838-05	\N
-220352	POMPEYA	POM	2203	A	2016-10-14 11:41:16.627838-05	\N
-220353	SAN CARLOS	SAN	2203	A	2016-10-14 11:41:16.627838-05	\N
-220354	SAN SEBASTIÁN DEL COCA	SAN	2203	A	2016-10-14 11:41:16.627838-05	\N
-220355	LAGO SAN PEDRO	LAG	2203	A	2016-10-14 11:41:16.627838-05	\N
-220356	RUMIPAMBA	RUM	2203	A	2016-10-14 11:41:16.627838-05	\N
-220357	TRES DE NOVIEMBRE	TRE	2203	A	2016-10-14 11:41:16.627838-05	\N
-220358	UNIÓN MILAGREÑA	UNI	2203	A	2016-10-14 11:41:16.627838-05	\N
-220450	LORETO	LOR	2204	A	2016-10-14 11:41:16.627838-05	\N
-220451	AVILA (CAB. EN HUIRUNO)	AVI	2204	A	2016-10-14 11:41:16.627838-05	\N
-220452	PUERTO MURIALDO	PUE	2204	A	2016-10-14 11:41:16.627838-05	\N
-220453	SAN JOSÉ DE PAYAMINO	SAN	2204	A	2016-10-14 11:41:16.627838-05	\N
-220454	SAN JOSÉ DE DAHUANO	SAN	2204	A	2016-10-14 11:41:16.627838-05	\N
-220455	SAN VICENTE DE HUATICOCHA	SAN	2204	A	2016-10-14 11:41:16.627838-05	\N
-230101	ABRAHAM CALAZACÓN	ABR	2301	A	2016-10-14 11:41:16.627838-05	\N
-230102	BOMBOLÍ	BOM	2301	A	2016-10-14 11:41:16.627838-05	\N
-230103	CHIGUILPE	CHI	2301	A	2016-10-14 11:41:16.627838-05	\N
-230104	RÍO TOACHI	RÍO	2301	A	2016-10-14 11:41:16.627838-05	\N
-230105	RÍO VERDE	RÍO	2301	A	2016-10-14 11:41:16.627838-05	\N
-230106	SANTO DOMINGO DE LOS COLORADOS	SAN	2301	A	2016-10-14 11:41:16.627838-05	\N
-230107	ZARACAY	ZAR	2301	A	2016-10-14 11:41:16.627838-05	\N
-230150	SANTO DOMINGO DE LOS COLORADOS	SAN	2301	A	2016-10-14 11:41:16.627838-05	\N
-230151	ALLURIQUÍN	ALL	2301	A	2016-10-14 11:41:16.627838-05	\N
-230152	PUERTO LIMÓN	PUE	2301	A	2016-10-14 11:41:16.627838-05	\N
-230153	LUZ DE AMÉRICA	LUZ	2301	A	2016-10-14 11:41:16.627838-05	\N
-230154	SAN JACINTO DEL BÚA	SAN	2301	A	2016-10-14 11:41:16.627838-05	\N
-230155	VALLE HERMOSO	VAL	2301	A	2016-10-14 11:41:16.627838-05	\N
-230156	EL ESFUERZO	EL 	2301	A	2016-10-14 11:41:16.627838-05	\N
-230157	SANTA MARÍA DEL TOACHI	SAN	2301	A	2016-10-14 11:41:16.627838-05	\N
-240101	BALLENITA	BAL	2401	A	2016-10-14 11:41:16.627838-05	\N
-240102	SANTA ELENA	SAN	2401	A	2016-10-14 11:41:16.627838-05	\N
-240150	SANTA ELENA	SAN	2401	A	2016-10-14 11:41:16.627838-05	\N
-240151	ATAHUALPA	ATA	2401	A	2016-10-14 11:41:16.627838-05	\N
-240152	COLONCHE	COL	2401	A	2016-10-14 11:41:16.627838-05	\N
-240153	CHANDUY	CHA	2401	A	2016-10-14 11:41:16.627838-05	\N
-240154	MANGLARALTO	MAN	2401	A	2016-10-14 11:41:16.627838-05	\N
-240155	SIMÓN BOLÍVAR (JULIO MORENO)	SIM	2401	A	2016-10-14 11:41:16.627838-05	\N
-240156	SAN JOSÉ DE ANCÓN	SAN	2401	A	2016-10-14 11:41:16.627838-05	\N
-240250	LA LIBERTAD	LA 	2402	A	2016-10-14 11:41:16.627838-05	\N
-240301	CARLOS ESPINOZA LARREA	CAR	2403	A	2016-10-14 11:41:16.627838-05	\N
-240302	GRAL. ALBERTO ENRÍQUEZ GALLO	GRA	2403	A	2016-10-14 11:41:16.627838-05	\N
-240303	VICENTE ROCAFUERTE	VIC	2403	A	2016-10-14 11:41:16.627838-05	\N
-240304	SANTA ROSA	SAN	2403	A	2016-10-14 11:41:16.627838-05	\N
-240350	SALINAS	SAL	2403	A	2016-10-14 11:41:16.627838-05	\N
-240351	ANCONCITO	ANC	2403	A	2016-10-14 11:41:16.627838-05	\N
-240352	JOSÉ LUIS TAMAYO (MUEY)	JOS	2403	A	2016-10-14 11:41:16.627838-05	\N
-900151	LAS GOLONDRINAS	LAS	9001	A	2016-10-14 11:41:16.627838-05	\N
-900351	MANGA DEL CURA	MAN	9003	A	2016-10-14 11:41:16.627838-05	\N
-900451	EL PIEDRERO	EL 	9004	A	2016-10-14 11:41:16.627838-05	\N
-080265	SANTA LUCÍA DE LAS PEÑAS	SAN	0802	A	2016-10-18 10:02:22.031498-05	\N
-01	AZUAY	AZU	00	A	2016-10-14 11:41:16.627838-05	(072)
-0101	CUENCA	CUE	01	A	2016-10-14 11:41:16.627838-05	\N
-010101	BELLAVISTA	BEL	0101	A	2016-10-14 11:41:16.627838-05	\N
-09	GUAYAS	GUA	00	A	2016-10-14 11:41:16.627838-05	(042)
-14	MORONA SANTIAGO	MOR	00	A	2016-10-14 11:41:16.627838-05	(072)
-22	ORELLANA	ORE	00	A	2016-10-14 11:41:16.627838-05	(062)
-\.
-
-
---
--- TOC entry 3456 (class 0 OID 16611)
--- Dependencies: 236
+-- TOC entry 3517 (class 0 OID 16611)
+-- Dependencies: 234
 -- Data for Name: personas; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY personas (id, ci_docuemto, pasaporte, primer_nombre, segundo_nombre, primer_apellido, segundo_apellido, id_localidad, calle, transversal, numero, ruc) FROM stdin;
+COPY personas (id, ci_documento, pasaporte, primer_nombre, segundo_nombre, primer_apellido, segundo_apellido, id_localidad, calle, transversal, numero, ruc) FROM stdin;
 \.
 
 
 --
--- TOC entry 3569 (class 0 OID 0)
--- Dependencies: 237
+-- TOC entry 3659 (class 0 OID 0)
+-- Dependencies: 235
 -- Name: personas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
@@ -6123,8 +4898,8 @@ SELECT pg_catalog.setval('personas_id_seq', 1, false);
 
 
 --
--- TOC entry 3458 (class 0 OID 16619)
--- Dependencies: 238
+-- TOC entry 3519 (class 0 OID 16619)
+-- Dependencies: 236
 -- Data for Name: telefonos_personas; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -6133,8 +4908,8 @@ COPY telefonos_personas (id, id_persona, numero, fecha, estado) FROM stdin;
 
 
 --
--- TOC entry 3570 (class 0 OID 0)
--- Dependencies: 239
+-- TOC entry 3660 (class 0 OID 0)
+-- Dependencies: 237
 -- Name: telefonos_personas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
@@ -6144,21 +4919,20 @@ SELECT pg_catalog.setval('telefonos_personas_id_seq', 1, false);
 SET search_path = usuarios, pg_catalog;
 
 --
--- TOC entry 3460 (class 0 OID 16632)
--- Dependencies: 241
+-- TOC entry 3521 (class 0 OID 16632)
+-- Dependencies: 238
 -- Data for Name: usuarios; Type: TABLE DATA; Schema: usuarios; Owner: postgres
 --
 
-COPY usuarios (id, nick, clave_clave, id_estado, fecha_creacion) FROM stdin;
-1001843646001	MONTESDEOCA_BENAVIDES_ED_1001843646001	$2y$10$V9svrCj5hZX/vN3VAK7OuuIiysPikTpo6WFaxufxH3iFBhXgD8KI.	A	2016-10-20 09:28:20.967768-05
+COPY usuarios (id, nick, clave_clave, id_estado, fecha_creacion, estado_clave) FROM stdin;
 \.
 
 
 SET search_path = ventas, pg_catalog;
 
 --
--- TOC entry 3461 (class 0 OID 16638)
--- Dependencies: 242
+-- TOC entry 3522 (class 0 OID 16638)
+-- Dependencies: 239
 -- Data for Name: detalle_factura; Type: TABLE DATA; Schema: ventas; Owner: postgres
 --
 
@@ -6167,8 +4941,8 @@ COPY detalle_factura (id, id_factura, id_producto) FROM stdin;
 
 
 --
--- TOC entry 3571 (class 0 OID 0)
--- Dependencies: 243
+-- TOC entry 3661 (class 0 OID 0)
+-- Dependencies: 240
 -- Name: detalle_factura_id_seq; Type: SEQUENCE SET; Schema: ventas; Owner: postgres
 --
 
@@ -6176,8 +4950,8 @@ SELECT pg_catalog.setval('detalle_factura_id_seq', 1, false);
 
 
 --
--- TOC entry 3463 (class 0 OID 16643)
--- Dependencies: 244
+-- TOC entry 3524 (class 0 OID 16643)
+-- Dependencies: 241
 -- Data for Name: facturas; Type: TABLE DATA; Schema: ventas; Owner: postgres
 --
 
@@ -6186,8 +4960,8 @@ COPY facturas (id, numero_factura, numero_autorizacion, ruc_emisor, denominacion
 
 
 --
--- TOC entry 3572 (class 0 OID 0)
--- Dependencies: 245
+-- TOC entry 3662 (class 0 OID 0)
+-- Dependencies: 242
 -- Name: facturas_id_seq; Type: SEQUENCE SET; Schema: ventas; Owner: postgres
 --
 
@@ -6195,8 +4969,8 @@ SELECT pg_catalog.setval('facturas_id_seq', 1, false);
 
 
 --
--- TOC entry 3465 (class 0 OID 16652)
--- Dependencies: 246
+-- TOC entry 3526 (class 0 OID 16652)
+-- Dependencies: 243
 -- Data for Name: formas_pago; Type: TABLE DATA; Schema: ventas; Owner: postgres
 --
 
@@ -6205,8 +4979,8 @@ COPY formas_pago (id, nombre, descripcion, estado, fecha) FROM stdin;
 
 
 --
--- TOC entry 3466 (class 0 OID 16658)
--- Dependencies: 247
+-- TOC entry 3527 (class 0 OID 16658)
+-- Dependencies: 244
 -- Data for Name: formas_pago_facturas; Type: TABLE DATA; Schema: ventas; Owner: postgres
 --
 
@@ -6215,8 +4989,8 @@ COPY formas_pago_facturas (id, id_factura, id_formas_pago) FROM stdin;
 
 
 --
--- TOC entry 3573 (class 0 OID 0)
--- Dependencies: 248
+-- TOC entry 3663 (class 0 OID 0)
+-- Dependencies: 245
 -- Name: formas_pago_facturas_id_seq; Type: SEQUENCE SET; Schema: ventas; Owner: postgres
 --
 
@@ -6224,8 +4998,8 @@ SELECT pg_catalog.setval('formas_pago_facturas_id_seq', 1, false);
 
 
 --
--- TOC entry 3574 (class 0 OID 0)
--- Dependencies: 249
+-- TOC entry 3664 (class 0 OID 0)
+-- Dependencies: 246
 -- Name: formas_pago_id_seq; Type: SEQUENCE SET; Schema: ventas; Owner: postgres
 --
 
@@ -6233,8 +5007,8 @@ SELECT pg_catalog.setval('formas_pago_id_seq', 1, false);
 
 
 --
--- TOC entry 3469 (class 0 OID 16665)
--- Dependencies: 250
+-- TOC entry 3530 (class 0 OID 16665)
+-- Dependencies: 247
 -- Data for Name: producto_descuento; Type: TABLE DATA; Schema: ventas; Owner: postgres
 --
 
@@ -6243,18 +5017,56 @@ COPY producto_descuento (id, id_producto, id_catalogo, estado, fecha_fin_descuen
 
 
 --
--- TOC entry 3575 (class 0 OID 0)
--- Dependencies: 251
+-- TOC entry 3665 (class 0 OID 0)
+-- Dependencies: 248
 -- Name: producto_descuento_id_seq; Type: SEQUENCE SET; Schema: ventas; Owner: postgres
 --
 
 SELECT pg_catalog.setval('producto_descuento_id_seq', 1, false);
 
 
+SET search_path = administracion, pg_catalog;
+
+--
+-- TOC entry 3272 (class 2606 OID 45879)
+-- Name: empresas_PK; Type: CONSTRAINT; Schema: administracion; Owner: postgres
+--
+
+ALTER TABLE ONLY empresas
+    ADD CONSTRAINT "empresas_PK" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3280 (class 2606 OID 47155)
+-- Name: imagen_empresa_PK; Type: CONSTRAINT; Schema: administracion; Owner: postgres
+--
+
+ALTER TABLE ONLY imagen_empresa
+    ADD CONSTRAINT "imagen_empresa_PK" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3276 (class 2606 OID 47081)
+-- Name: sucursales_PK; Type: CONSTRAINT; Schema: administracion; Owner: postgres
+--
+
+ALTER TABLE ONLY sucursales
+    ADD CONSTRAINT "sucursales_PK" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3274 (class 2606 OID 45881)
+-- Name: valor_unico; Type: CONSTRAINT; Schema: administracion; Owner: postgres
+--
+
+ALTER TABLE ONLY empresas
+    ADD CONSTRAINT valor_unico UNIQUE (razon_social);
+
+
 SET search_path = auditoria, pg_catalog;
 
 --
--- TOC entry 3159 (class 2606 OID 16708)
+-- TOC entry 3208 (class 2606 OID 16708)
 -- Name: auditoria_pk; Type: CONSTRAINT; Schema: auditoria; Owner: postgres
 --
 
@@ -6263,7 +5075,7 @@ ALTER TABLE ONLY auditoria
 
 
 --
--- TOC entry 3161 (class 2606 OID 16710)
+-- TOC entry 3210 (class 2606 OID 16710)
 -- Name: ingreso_usuarios_PK; Type: CONSTRAINT; Schema: auditoria; Owner: postgres
 --
 
@@ -6274,7 +5086,7 @@ ALTER TABLE ONLY ingresos_usuarios
 SET search_path = contabilidad, pg_catalog;
 
 --
--- TOC entry 3163 (class 2606 OID 16712)
+-- TOC entry 3212 (class 2606 OID 16712)
 -- Name: ambito_impuesto_PK; Type: CONSTRAINT; Schema: contabilidad; Owner: postgres
 --
 
@@ -6283,7 +5095,25 @@ ALTER TABLE ONLY ambitos_impuestos
 
 
 --
--- TOC entry 3165 (class 2606 OID 16714)
+-- TOC entry 3286 (class 2606 OID 47990)
+-- Name: bancos_PK; Type: CONSTRAINT; Schema: contabilidad; Owner: postgres
+--
+
+ALTER TABLE ONLY bancos
+    ADD CONSTRAINT "bancos_PK" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3284 (class 2606 OID 47259)
+-- Name: cuenta_contable_PK; Type: CONSTRAINT; Schema: contabilidad; Owner: postgres
+--
+
+ALTER TABLE ONLY cuentas_contables
+    ADD CONSTRAINT "cuenta_contable_PK" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3214 (class 2606 OID 16714)
 -- Name: grupo_impuesto_PK; Type: CONSTRAINT; Schema: contabilidad; Owner: postgres
 --
 
@@ -6292,7 +5122,7 @@ ALTER TABLE ONLY grupo_impuestos
 
 
 --
--- TOC entry 3167 (class 2606 OID 16716)
+-- TOC entry 3216 (class 2606 OID 16716)
 -- Name: impuesto_PK; Type: CONSTRAINT; Schema: contabilidad; Owner: postgres
 --
 
@@ -6300,19 +5130,28 @@ ALTER TABLE ONLY impuestos
     ADD CONSTRAINT "impuesto_PK" PRIMARY KEY (id);
 
 
+--
+-- TOC entry 3282 (class 2606 OID 47176)
+-- Name: tipo_cueta_contable; Type: CONSTRAINT; Schema: contabilidad; Owner: postgres
+--
+
+ALTER TABLE ONLY tipos_cuentas_contables
+    ADD CONSTRAINT tipo_cueta_contable PRIMARY KEY (id);
+
+
 SET search_path = inventario, pg_catalog;
 
 --
--- TOC entry 3191 (class 2606 OID 16720)
--- Name: bodega_PK; Type: CONSTRAINT; Schema: inventario; Owner: postgres
+-- TOC entry 3278 (class 2606 OID 47096)
+-- Name: bodega_pro_PK; Type: CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
-ALTER TABLE ONLY sucursal
-    ADD CONSTRAINT "bodega_PK" PRIMARY KEY (id);
+ALTER TABLE ONLY bodegas
+    ADD CONSTRAINT "bodega_pro_PK" PRIMARY KEY (id);
 
 
 --
--- TOC entry 3171 (class 2606 OID 16722)
+-- TOC entry 3220 (class 2606 OID 16722)
 -- Name: categorias_PK; Type: CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6321,7 +5160,7 @@ ALTER TABLE ONLY categorias
 
 
 --
--- TOC entry 3173 (class 2606 OID 16724)
+-- TOC entry 3222 (class 2606 OID 16724)
 -- Name: descripcion_producto_PK; Type: CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6330,7 +5169,7 @@ ALTER TABLE ONLY descripcion_producto
 
 
 --
--- TOC entry 3175 (class 2606 OID 16726)
+-- TOC entry 3224 (class 2606 OID 16726)
 -- Name: estado_descriptivo_PK; Type: CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6339,7 +5178,7 @@ ALTER TABLE ONLY estado_descriptivo
 
 
 --
--- TOC entry 3177 (class 2606 OID 16728)
+-- TOC entry 3226 (class 2606 OID 16728)
 -- Name: garantia_PK; Type: CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6348,7 +5187,7 @@ ALTER TABLE ONLY garantias
 
 
 --
--- TOC entry 3169 (class 2606 OID 16730)
+-- TOC entry 3218 (class 2606 OID 16730)
 -- Name: id; Type: CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6357,7 +5196,7 @@ ALTER TABLE ONLY catalogos
 
 
 --
--- TOC entry 3179 (class 2606 OID 16732)
+-- TOC entry 3228 (class 2606 OID 16732)
 -- Name: imagenes_productos_PK; Type: CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6366,7 +5205,7 @@ ALTER TABLE ONLY imagenes_productos
 
 
 --
--- TOC entry 3181 (class 2606 OID 16734)
+-- TOC entry 3230 (class 2606 OID 16734)
 -- Name: marca_PK; Type: CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6375,7 +5214,7 @@ ALTER TABLE ONLY marcas
 
 
 --
--- TOC entry 3183 (class 2606 OID 16736)
+-- TOC entry 3232 (class 2606 OID 16736)
 -- Name: modelos_PK; Type: CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6384,7 +5223,7 @@ ALTER TABLE ONLY modelos
 
 
 --
--- TOC entry 3185 (class 2606 OID 16738)
+-- TOC entry 3234 (class 2606 OID 16738)
 -- Name: producto_PK; Type: CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6393,7 +5232,7 @@ ALTER TABLE ONLY productos
 
 
 --
--- TOC entry 3187 (class 2606 OID 16740)
+-- TOC entry 3236 (class 2606 OID 16740)
 -- Name: productos_impuestos_PK; Type: CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6402,7 +5241,7 @@ ALTER TABLE ONLY productos_impuestos
 
 
 --
--- TOC entry 3189 (class 2606 OID 16742)
+-- TOC entry 3238 (class 2606 OID 16742)
 -- Name: proveedores_PK; Type: CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6411,7 +5250,7 @@ ALTER TABLE ONLY proveedores
 
 
 --
--- TOC entry 3195 (class 2606 OID 16744)
+-- TOC entry 3242 (class 2606 OID 16744)
 -- Name: tipo_catalogo_PK; Type: CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6420,7 +5259,7 @@ ALTER TABLE ONLY tipos_catalogos
 
 
 --
--- TOC entry 3193 (class 2606 OID 16746)
+-- TOC entry 3240 (class 2606 OID 16746)
 -- Name: tipo_consumo_pkey; Type: CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6429,7 +5268,7 @@ ALTER TABLE ONLY tipo_consumo
 
 
 --
--- TOC entry 3201 (class 2606 OID 16748)
+-- TOC entry 3248 (class 2606 OID 16748)
 -- Name: tipo_imagen_producto_PK; Type: CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6438,7 +5277,7 @@ ALTER TABLE ONLY tipos_imagenes_productos
 
 
 --
--- TOC entry 3203 (class 2606 OID 16750)
+-- TOC entry 3250 (class 2606 OID 16750)
 -- Name: tipo_pruducto_PK; Type: CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6447,7 +5286,7 @@ ALTER TABLE ONLY tipos_productos
 
 
 --
--- TOC entry 3197 (class 2606 OID 16752)
+-- TOC entry 3244 (class 2606 OID 16752)
 -- Name: tipos_categorias_PK; Type: CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6456,7 +5295,7 @@ ALTER TABLE ONLY tipos_categorias
 
 
 --
--- TOC entry 3199 (class 2606 OID 16754)
+-- TOC entry 3246 (class 2606 OID 16754)
 -- Name: tipos_garantia_PK; Type: CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6465,7 +5304,7 @@ ALTER TABLE ONLY tipos_garantias
 
 
 --
--- TOC entry 3205 (class 2606 OID 16756)
+-- TOC entry 3252 (class 2606 OID 16756)
 -- Name: ubicacion_PK; Type: CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6476,7 +5315,7 @@ ALTER TABLE ONLY ubicaciones
 SET search_path = public, pg_catalog;
 
 --
--- TOC entry 3207 (class 2606 OID 16758)
+-- TOC entry 3254 (class 2606 OID 16758)
 -- Name: estado_PK; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6485,16 +5324,7 @@ ALTER TABLE ONLY estados
 
 
 --
--- TOC entry 3209 (class 2606 OID 16760)
--- Name: localidad_PK; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY localidades
-    ADD CONSTRAINT "localidad_PK" PRIMARY KEY (id);
-
-
---
--- TOC entry 3211 (class 2606 OID 16762)
+-- TOC entry 3256 (class 2606 OID 16762)
 -- Name: persona_PK; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6503,7 +5333,7 @@ ALTER TABLE ONLY personas
 
 
 --
--- TOC entry 3213 (class 2606 OID 16764)
+-- TOC entry 3258 (class 2606 OID 16764)
 -- Name: telefonos_personas_PK; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6514,7 +5344,7 @@ ALTER TABLE ONLY telefonos_personas
 SET search_path = usuarios, pg_catalog;
 
 --
--- TOC entry 3215 (class 2606 OID 16766)
+-- TOC entry 3260 (class 2606 OID 16766)
 -- Name: usuarios_PK; Type: CONSTRAINT; Schema: usuarios; Owner: postgres
 --
 
@@ -6525,7 +5355,7 @@ ALTER TABLE ONLY usuarios
 SET search_path = ventas, pg_catalog;
 
 --
--- TOC entry 3217 (class 2606 OID 16768)
+-- TOC entry 3262 (class 2606 OID 16768)
 -- Name: detalle_factura_pkey; Type: CONSTRAINT; Schema: ventas; Owner: postgres
 --
 
@@ -6534,7 +5364,7 @@ ALTER TABLE ONLY detalle_factura
 
 
 --
--- TOC entry 3219 (class 2606 OID 16770)
+-- TOC entry 3264 (class 2606 OID 16770)
 -- Name: factura_PK; Type: CONSTRAINT; Schema: ventas; Owner: postgres
 --
 
@@ -6543,7 +5373,7 @@ ALTER TABLE ONLY facturas
 
 
 --
--- TOC entry 3223 (class 2606 OID 16772)
+-- TOC entry 3268 (class 2606 OID 16772)
 -- Name: formas_pago_facturas_PK; Type: CONSTRAINT; Schema: ventas; Owner: postgres
 --
 
@@ -6552,7 +5382,7 @@ ALTER TABLE ONLY formas_pago_facturas
 
 
 --
--- TOC entry 3221 (class 2606 OID 16774)
+-- TOC entry 3266 (class 2606 OID 16774)
 -- Name: formas_pago_pkey; Type: CONSTRAINT; Schema: ventas; Owner: postgres
 --
 
@@ -6561,7 +5391,7 @@ ALTER TABLE ONLY formas_pago
 
 
 --
--- TOC entry 3225 (class 2606 OID 16776)
+-- TOC entry 3270 (class 2606 OID 16776)
 -- Name: producto_descuento_PK; Type: CONSTRAINT; Schema: ventas; Owner: postgres
 --
 
@@ -6572,7 +5402,7 @@ ALTER TABLE ONLY producto_descuento
 SET search_path = contabilidad, pg_catalog;
 
 --
--- TOC entry 3267 (class 2620 OID 16782)
+-- TOC entry 3334 (class 2620 OID 16782)
 -- Name: personas_tg_audit; Type: TRIGGER; Schema: contabilidad; Owner: postgres
 --
 
@@ -6580,7 +5410,7 @@ CREATE TRIGGER personas_tg_audit AFTER INSERT OR DELETE OR UPDATE ON ambitos_imp
 
 
 --
--- TOC entry 3268 (class 2620 OID 16783)
+-- TOC entry 3335 (class 2620 OID 16783)
 -- Name: personas_tg_audit; Type: TRIGGER; Schema: contabilidad; Owner: postgres
 --
 
@@ -6588,7 +5418,7 @@ CREATE TRIGGER personas_tg_audit AFTER INSERT OR DELETE OR UPDATE ON genealogia_
 
 
 --
--- TOC entry 3269 (class 2620 OID 16784)
+-- TOC entry 3336 (class 2620 OID 16784)
 -- Name: personas_tg_audit; Type: TRIGGER; Schema: contabilidad; Owner: postgres
 --
 
@@ -6596,7 +5426,7 @@ CREATE TRIGGER personas_tg_audit AFTER INSERT OR DELETE OR UPDATE ON grupo_impue
 
 
 --
--- TOC entry 3270 (class 2620 OID 16785)
+-- TOC entry 3337 (class 2620 OID 16785)
 -- Name: personas_tg_audit; Type: TRIGGER; Schema: contabilidad; Owner: postgres
 --
 
@@ -6606,7 +5436,7 @@ CREATE TRIGGER personas_tg_audit AFTER INSERT OR DELETE OR UPDATE ON impuestos F
 SET search_path = inventario, pg_catalog;
 
 --
--- TOC entry 3272 (class 2620 OID 16786)
+-- TOC entry 3339 (class 2620 OID 16786)
 -- Name: personas_tg_audit; Type: TRIGGER; Schema: inventario; Owner: postgres
 --
 
@@ -6614,7 +5444,7 @@ CREATE TRIGGER personas_tg_audit AFTER INSERT OR DELETE OR UPDATE ON categorias 
 
 
 --
--- TOC entry 3273 (class 2620 OID 16787)
+-- TOC entry 3340 (class 2620 OID 16787)
 -- Name: personas_tg_audit; Type: TRIGGER; Schema: inventario; Owner: postgres
 --
 
@@ -6622,7 +5452,7 @@ CREATE TRIGGER personas_tg_audit AFTER INSERT OR DELETE OR UPDATE ON descripcion
 
 
 --
--- TOC entry 3274 (class 2620 OID 16788)
+-- TOC entry 3341 (class 2620 OID 16788)
 -- Name: personas_tg_audit; Type: TRIGGER; Schema: inventario; Owner: postgres
 --
 
@@ -6630,7 +5460,7 @@ CREATE TRIGGER personas_tg_audit AFTER INSERT OR DELETE OR UPDATE ON estado_desc
 
 
 --
--- TOC entry 3275 (class 2620 OID 16789)
+-- TOC entry 3342 (class 2620 OID 16789)
 -- Name: personas_tg_audit; Type: TRIGGER; Schema: inventario; Owner: postgres
 --
 
@@ -6638,7 +5468,7 @@ CREATE TRIGGER personas_tg_audit AFTER INSERT OR DELETE OR UPDATE ON garantias F
 
 
 --
--- TOC entry 3276 (class 2620 OID 16790)
+-- TOC entry 3343 (class 2620 OID 16790)
 -- Name: personas_tg_audit; Type: TRIGGER; Schema: inventario; Owner: postgres
 --
 
@@ -6646,7 +5476,7 @@ CREATE TRIGGER personas_tg_audit AFTER INSERT OR DELETE OR UPDATE ON imagenes_pr
 
 
 --
--- TOC entry 3277 (class 2620 OID 16791)
+-- TOC entry 3344 (class 2620 OID 16791)
 -- Name: personas_tg_audit; Type: TRIGGER; Schema: inventario; Owner: postgres
 --
 
@@ -6654,7 +5484,7 @@ CREATE TRIGGER personas_tg_audit AFTER INSERT OR DELETE OR UPDATE ON marcas FOR 
 
 
 --
--- TOC entry 3278 (class 2620 OID 16792)
+-- TOC entry 3345 (class 2620 OID 16792)
 -- Name: personas_tg_audit; Type: TRIGGER; Schema: inventario; Owner: postgres
 --
 
@@ -6662,7 +5492,7 @@ CREATE TRIGGER personas_tg_audit AFTER INSERT OR DELETE OR UPDATE ON modelos FOR
 
 
 --
--- TOC entry 3279 (class 2620 OID 16793)
+-- TOC entry 3346 (class 2620 OID 16793)
 -- Name: personas_tg_audit; Type: TRIGGER; Schema: inventario; Owner: postgres
 --
 
@@ -6670,7 +5500,7 @@ CREATE TRIGGER personas_tg_audit AFTER INSERT OR DELETE OR UPDATE ON productos F
 
 
 --
--- TOC entry 3280 (class 2620 OID 16794)
+-- TOC entry 3347 (class 2620 OID 16794)
 -- Name: personas_tg_audit; Type: TRIGGER; Schema: inventario; Owner: postgres
 --
 
@@ -6678,7 +5508,7 @@ CREATE TRIGGER personas_tg_audit AFTER INSERT OR DELETE OR UPDATE ON productos_i
 
 
 --
--- TOC entry 3281 (class 2620 OID 16795)
+-- TOC entry 3348 (class 2620 OID 16795)
 -- Name: personas_tg_audit; Type: TRIGGER; Schema: inventario; Owner: postgres
 --
 
@@ -6686,15 +5516,7 @@ CREATE TRIGGER personas_tg_audit AFTER INSERT OR DELETE OR UPDATE ON proveedores
 
 
 --
--- TOC entry 3282 (class 2620 OID 16796)
--- Name: personas_tg_audit; Type: TRIGGER; Schema: inventario; Owner: postgres
---
-
-CREATE TRIGGER personas_tg_audit AFTER INSERT OR DELETE OR UPDATE ON sucursal FOR EACH ROW EXECUTE PROCEDURE public.fun_auditoria();
-
-
---
--- TOC entry 3284 (class 2620 OID 16797)
+-- TOC entry 3350 (class 2620 OID 16797)
 -- Name: personas_tg_audit; Type: TRIGGER; Schema: inventario; Owner: postgres
 --
 
@@ -6702,7 +5524,7 @@ CREATE TRIGGER personas_tg_audit AFTER INSERT OR DELETE OR UPDATE ON tipos_categ
 
 
 --
--- TOC entry 3285 (class 2620 OID 16798)
+-- TOC entry 3351 (class 2620 OID 16798)
 -- Name: personas_tg_audit; Type: TRIGGER; Schema: inventario; Owner: postgres
 --
 
@@ -6710,7 +5532,7 @@ CREATE TRIGGER personas_tg_audit AFTER INSERT OR DELETE OR UPDATE ON tipos_garan
 
 
 --
--- TOC entry 3286 (class 2620 OID 16799)
+-- TOC entry 3352 (class 2620 OID 16799)
 -- Name: personas_tg_audit; Type: TRIGGER; Schema: inventario; Owner: postgres
 --
 
@@ -6718,7 +5540,7 @@ CREATE TRIGGER personas_tg_audit AFTER INSERT OR DELETE OR UPDATE ON tipos_image
 
 
 --
--- TOC entry 3287 (class 2620 OID 16800)
+-- TOC entry 3353 (class 2620 OID 16800)
 -- Name: personas_tg_audit; Type: TRIGGER; Schema: inventario; Owner: postgres
 --
 
@@ -6726,7 +5548,7 @@ CREATE TRIGGER personas_tg_audit AFTER INSERT OR DELETE OR UPDATE ON tipos_produ
 
 
 --
--- TOC entry 3288 (class 2620 OID 16801)
+-- TOC entry 3354 (class 2620 OID 16801)
 -- Name: personas_tg_audit; Type: TRIGGER; Schema: inventario; Owner: postgres
 --
 
@@ -6734,7 +5556,7 @@ CREATE TRIGGER personas_tg_audit AFTER INSERT OR DELETE OR UPDATE ON ubicaciones
 
 
 --
--- TOC entry 3283 (class 2620 OID 16802)
+-- TOC entry 3349 (class 2620 OID 16802)
 -- Name: personas_tg_audit; Type: TRIGGER; Schema: inventario; Owner: postgres
 --
 
@@ -6742,7 +5564,7 @@ CREATE TRIGGER personas_tg_audit AFTER INSERT OR DELETE OR UPDATE ON tipos_catal
 
 
 --
--- TOC entry 3271 (class 2620 OID 16803)
+-- TOC entry 3338 (class 2620 OID 16803)
 -- Name: personas_tg_audit; Type: TRIGGER; Schema: inventario; Owner: postgres
 --
 
@@ -6752,7 +5574,7 @@ CREATE TRIGGER personas_tg_audit AFTER INSERT OR DELETE OR UPDATE ON catalogos F
 SET search_path = public, pg_catalog;
 
 --
--- TOC entry 3289 (class 2620 OID 16804)
+-- TOC entry 3355 (class 2620 OID 16804)
 -- Name: estados_tg_audit; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -6760,25 +5582,46 @@ CREATE TRIGGER estados_tg_audit AFTER INSERT OR DELETE OR UPDATE ON estados FOR 
 
 
 --
--- TOC entry 3291 (class 2620 OID 16805)
--- Name: localidades_tg_audit; Type: TRIGGER; Schema: public; Owner: postgres
---
-
-CREATE TRIGGER localidades_tg_audit AFTER INSERT OR DELETE OR UPDATE ON localidades FOR EACH ROW EXECUTE PROCEDURE fun_auditoria();
-
-
---
--- TOC entry 3290 (class 2620 OID 16806)
+-- TOC entry 3356 (class 2620 OID 16806)
 -- Name: personas_tg_audit; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
 CREATE TRIGGER personas_tg_audit AFTER INSERT OR DELETE OR UPDATE ON estados FOR EACH ROW EXECUTE PROCEDURE fun_auditoria();
 
 
+SET search_path = administracion, pg_catalog;
+
+--
+-- TOC entry 3327 (class 2606 OID 45882)
+-- Name: estado_empresa_FK; Type: FK CONSTRAINT; Schema: administracion; Owner: postgres
+--
+
+ALTER TABLE ONLY empresas
+    ADD CONSTRAINT "estado_empresa_FK" FOREIGN KEY (id_estado) REFERENCES public.estados(id);
+
+
+--
+-- TOC entry 3330 (class 2606 OID 47156)
+-- Name: imagen_empresa_dir_FK; Type: FK CONSTRAINT; Schema: administracion; Owner: postgres
+--
+
+ALTER TABLE ONLY imagen_empresa
+    ADD CONSTRAINT "imagen_empresa_dir_FK" FOREIGN KEY (empresa) REFERENCES empresas(id);
+
+
+--
+-- TOC entry 3331 (class 2606 OID 47161)
+-- Name: imagen_empresa_estado_FK; Type: FK CONSTRAINT; Schema: administracion; Owner: postgres
+--
+
+ALTER TABLE ONLY imagen_empresa
+    ADD CONSTRAINT "imagen_empresa_estado_FK" FOREIGN KEY (estado) REFERENCES public.estados(id);
+
+
 SET search_path = contabilidad, pg_catalog;
 
 --
--- TOC entry 3230 (class 2606 OID 16807)
+-- TOC entry 3291 (class 2606 OID 16807)
 -- Name: ambito_FK; Type: FK CONSTRAINT; Schema: contabilidad; Owner: postgres
 --
 
@@ -6787,7 +5630,7 @@ ALTER TABLE ONLY impuestos
 
 
 --
--- TOC entry 3229 (class 2606 OID 16812)
+-- TOC entry 3290 (class 2606 OID 16812)
 -- Name: estado_FK; Type: FK CONSTRAINT; Schema: contabilidad; Owner: postgres
 --
 
@@ -6796,7 +5639,7 @@ ALTER TABLE ONLY grupo_impuestos
 
 
 --
--- TOC entry 3226 (class 2606 OID 16817)
+-- TOC entry 3287 (class 2606 OID 16817)
 -- Name: estado_FK; Type: FK CONSTRAINT; Schema: contabilidad; Owner: postgres
 --
 
@@ -6805,7 +5648,7 @@ ALTER TABLE ONLY ambitos_impuestos
 
 
 --
--- TOC entry 3231 (class 2606 OID 16822)
+-- TOC entry 3292 (class 2606 OID 16822)
 -- Name: estado_FK; Type: FK CONSTRAINT; Schema: contabilidad; Owner: postgres
 --
 
@@ -6814,7 +5657,16 @@ ALTER TABLE ONLY impuestos
 
 
 --
--- TOC entry 3227 (class 2606 OID 16827)
+-- TOC entry 3332 (class 2606 OID 47177)
+-- Name: estado_tipo_cuenta_contable_FK; Type: FK CONSTRAINT; Schema: contabilidad; Owner: postgres
+--
+
+ALTER TABLE ONLY tipos_cuentas_contables
+    ADD CONSTRAINT "estado_tipo_cuenta_contable_FK" FOREIGN KEY (estado) REFERENCES public.estados(id);
+
+
+--
+-- TOC entry 3288 (class 2606 OID 16827)
 -- Name: hijo_impuesto_FK; Type: FK CONSTRAINT; Schema: contabilidad; Owner: postgres
 --
 
@@ -6823,7 +5675,7 @@ ALTER TABLE ONLY genealogia_impuestos
 
 
 --
--- TOC entry 3228 (class 2606 OID 16832)
+-- TOC entry 3289 (class 2606 OID 16832)
 -- Name: padre_impuesto_FK; Type: FK CONSTRAINT; Schema: contabilidad; Owner: postgres
 --
 
@@ -6831,10 +5683,19 @@ ALTER TABLE ONLY genealogia_impuestos
     ADD CONSTRAINT "padre_impuesto_FK" FOREIGN KEY (id_impuesto_padre) REFERENCES impuestos(id);
 
 
+--
+-- TOC entry 3333 (class 2606 OID 47260)
+-- Name: tipo_cuenta_cuentas_contables_FK; Type: FK CONSTRAINT; Schema: contabilidad; Owner: postgres
+--
+
+ALTER TABLE ONLY cuentas_contables
+    ADD CONSTRAINT "tipo_cuenta_cuentas_contables_FK" FOREIGN KEY (tipo_cuenta) REFERENCES tipos_cuentas_contables(id);
+
+
 SET search_path = inventario, pg_catalog;
 
 --
--- TOC entry 3232 (class 2606 OID 16852)
+-- TOC entry 3293 (class 2606 OID 16852)
 -- Name: Catalogos_producto_fkey; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6843,7 +5704,7 @@ ALTER TABLE ONLY catalogos
 
 
 --
--- TOC entry 3244 (class 2606 OID 16857)
+-- TOC entry 3305 (class 2606 OID 16857)
 -- Name: categoria_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6852,7 +5713,7 @@ ALTER TABLE ONLY productos
 
 
 --
--- TOC entry 3257 (class 2606 OID 16862)
+-- TOC entry 3317 (class 2606 OID 16862)
 -- Name: estado_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6861,7 +5722,7 @@ ALTER TABLE ONLY tipos_imagenes_productos
 
 
 --
--- TOC entry 3239 (class 2606 OID 16867)
+-- TOC entry 3300 (class 2606 OID 16867)
 -- Name: estado_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6870,16 +5731,7 @@ ALTER TABLE ONLY imagenes_productos
 
 
 --
--- TOC entry 3253 (class 2606 OID 16872)
--- Name: estado_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
---
-
-ALTER TABLE ONLY sucursal
-    ADD CONSTRAINT "estado_FK" FOREIGN KEY (estado) REFERENCES public.estados(id);
-
-
---
--- TOC entry 3237 (class 2606 OID 16877)
+-- TOC entry 3298 (class 2606 OID 16877)
 -- Name: estado_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6888,7 +5740,7 @@ ALTER TABLE ONLY garantias
 
 
 --
--- TOC entry 3255 (class 2606 OID 16882)
+-- TOC entry 3315 (class 2606 OID 16882)
 -- Name: estado_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6897,7 +5749,7 @@ ALTER TABLE ONLY tipos_categorias
 
 
 --
--- TOC entry 3242 (class 2606 OID 16887)
+-- TOC entry 3303 (class 2606 OID 16887)
 -- Name: estado_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6906,7 +5758,7 @@ ALTER TABLE ONLY marcas
 
 
 --
--- TOC entry 3243 (class 2606 OID 16892)
+-- TOC entry 3304 (class 2606 OID 16892)
 -- Name: estado_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6915,7 +5767,7 @@ ALTER TABLE ONLY modelos
 
 
 --
--- TOC entry 3236 (class 2606 OID 16897)
+-- TOC entry 3297 (class 2606 OID 16897)
 -- Name: estado_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6924,7 +5776,7 @@ ALTER TABLE ONLY estado_descriptivo
 
 
 --
--- TOC entry 3259 (class 2606 OID 16902)
+-- TOC entry 3319 (class 2606 OID 16902)
 -- Name: estado_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6933,7 +5785,7 @@ ALTER TABLE ONLY ubicaciones
 
 
 --
--- TOC entry 3258 (class 2606 OID 16907)
+-- TOC entry 3318 (class 2606 OID 16907)
 -- Name: estado_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6942,7 +5794,7 @@ ALTER TABLE ONLY tipos_productos
 
 
 --
--- TOC entry 3254 (class 2606 OID 16912)
+-- TOC entry 3314 (class 2606 OID 16912)
 -- Name: estado_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6951,7 +5803,16 @@ ALTER TABLE ONLY tipos_catalogos
 
 
 --
--- TOC entry 3245 (class 2606 OID 16917)
+-- TOC entry 3329 (class 2606 OID 47097)
+-- Name: estado_bodega_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
+--
+
+ALTER TABLE ONLY bodegas
+    ADD CONSTRAINT "estado_bodega_FK" FOREIGN KEY (estado) REFERENCES public.estados(id);
+
+
+--
+-- TOC entry 3306 (class 2606 OID 16917)
 -- Name: estado_descriptivo_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6960,7 +5821,7 @@ ALTER TABLE ONLY productos
 
 
 --
--- TOC entry 3256 (class 2606 OID 16922)
+-- TOC entry 3316 (class 2606 OID 16922)
 -- Name: estados; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6969,7 +5830,7 @@ ALTER TABLE ONLY tipos_garantias
 
 
 --
--- TOC entry 3246 (class 2606 OID 16927)
+-- TOC entry 3307 (class 2606 OID 16927)
 -- Name: garantia_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6978,7 +5839,7 @@ ALTER TABLE ONLY productos
 
 
 --
--- TOC entry 3251 (class 2606 OID 16932)
+-- TOC entry 3312 (class 2606 OID 16932)
 -- Name: impuesto_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6987,7 +5848,7 @@ ALTER TABLE ONLY productos_impuestos
 
 
 --
--- TOC entry 3247 (class 2606 OID 16937)
+-- TOC entry 3308 (class 2606 OID 16937)
 -- Name: marca_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -6996,7 +5857,7 @@ ALTER TABLE ONLY productos
 
 
 --
--- TOC entry 3248 (class 2606 OID 16942)
+-- TOC entry 3309 (class 2606 OID 16942)
 -- Name: modelo_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -7005,7 +5866,7 @@ ALTER TABLE ONLY productos
 
 
 --
--- TOC entry 3235 (class 2606 OID 16947)
+-- TOC entry 3296 (class 2606 OID 16947)
 -- Name: producto_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -7014,7 +5875,7 @@ ALTER TABLE ONLY descripcion_producto
 
 
 --
--- TOC entry 3240 (class 2606 OID 16952)
+-- TOC entry 3301 (class 2606 OID 16952)
 -- Name: producto_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -7023,7 +5884,7 @@ ALTER TABLE ONLY imagenes_productos
 
 
 --
--- TOC entry 3252 (class 2606 OID 16957)
+-- TOC entry 3313 (class 2606 OID 16957)
 -- Name: producto_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -7032,7 +5893,7 @@ ALTER TABLE ONLY productos_impuestos
 
 
 --
--- TOC entry 3249 (class 2606 OID 16962)
+-- TOC entry 3310 (class 2606 OID 16962)
 -- Name: producto_tipo_consumo_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -7041,7 +5902,16 @@ ALTER TABLE ONLY productos
 
 
 --
--- TOC entry 3233 (class 2606 OID 16967)
+-- TOC entry 3328 (class 2606 OID 47102)
+-- Name: sucursal_bodega_dependencia_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
+--
+
+ALTER TABLE ONLY bodegas
+    ADD CONSTRAINT "sucursal_bodega_dependencia_FK" FOREIGN KEY (dependencia) REFERENCES administracion.sucursales(id);
+
+
+--
+-- TOC entry 3294 (class 2606 OID 16967)
 -- Name: tipo_catalogo_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -7050,7 +5920,7 @@ ALTER TABLE ONLY catalogos
 
 
 --
--- TOC entry 3234 (class 2606 OID 16972)
+-- TOC entry 3295 (class 2606 OID 16972)
 -- Name: tipo_categoria_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -7059,7 +5929,7 @@ ALTER TABLE ONLY categorias
 
 
 --
--- TOC entry 3238 (class 2606 OID 16977)
+-- TOC entry 3299 (class 2606 OID 16977)
 -- Name: tipo_garantia_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -7068,7 +5938,7 @@ ALTER TABLE ONLY garantias
 
 
 --
--- TOC entry 3241 (class 2606 OID 16982)
+-- TOC entry 3302 (class 2606 OID 16982)
 -- Name: tipo_imagen_producto; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -7077,7 +5947,7 @@ ALTER TABLE ONLY imagenes_productos
 
 
 --
--- TOC entry 3250 (class 2606 OID 16987)
+-- TOC entry 3311 (class 2606 OID 16987)
 -- Name: ubicacion_FK; Type: FK CONSTRAINT; Schema: inventario; Owner: postgres
 --
 
@@ -7088,7 +5958,7 @@ ALTER TABLE ONLY productos
 SET search_path = public, pg_catalog;
 
 --
--- TOC entry 3260 (class 2606 OID 16992)
+-- TOC entry 3320 (class 2606 OID 16992)
 -- Name: id_persona_FK; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -7099,7 +5969,7 @@ ALTER TABLE ONLY telefonos_personas
 SET search_path = ventas, pg_catalog;
 
 --
--- TOC entry 3261 (class 2606 OID 16997)
+-- TOC entry 3321 (class 2606 OID 16997)
 -- Name: detalle_factura_productos; Type: FK CONSTRAINT; Schema: ventas; Owner: postgres
 --
 
@@ -7108,7 +5978,7 @@ ALTER TABLE ONLY detalle_factura
 
 
 --
--- TOC entry 3262 (class 2606 OID 17002)
+-- TOC entry 3322 (class 2606 OID 17002)
 -- Name: factura_estado_FK; Type: FK CONSTRAINT; Schema: ventas; Owner: postgres
 --
 
@@ -7117,7 +5987,7 @@ ALTER TABLE ONLY facturas
 
 
 --
--- TOC entry 3263 (class 2606 OID 17007)
+-- TOC entry 3323 (class 2606 OID 17007)
 -- Name: forma_pago_estado_FK; Type: FK CONSTRAINT; Schema: ventas; Owner: postgres
 --
 
@@ -7126,7 +5996,7 @@ ALTER TABLE ONLY formas_pago
 
 
 --
--- TOC entry 3264 (class 2606 OID 17012)
+-- TOC entry 3324 (class 2606 OID 17012)
 -- Name: formas_pago_formas_pago_FK; Type: FK CONSTRAINT; Schema: ventas; Owner: postgres
 --
 
@@ -7135,7 +6005,7 @@ ALTER TABLE ONLY formas_pago_facturas
 
 
 --
--- TOC entry 3265 (class 2606 OID 17017)
+-- TOC entry 3325 (class 2606 OID 17017)
 -- Name: producto_catalogo_catalogo; Type: FK CONSTRAINT; Schema: ventas; Owner: postgres
 --
 
@@ -7144,7 +6014,7 @@ ALTER TABLE ONLY producto_descuento
 
 
 --
--- TOC entry 3266 (class 2606 OID 17022)
+-- TOC entry 3326 (class 2606 OID 17022)
 -- Name: producto_descuento_producto_FK; Type: FK CONSTRAINT; Schema: ventas; Owner: postgres
 --
 
@@ -7153,7 +6023,7 @@ ALTER TABLE ONLY producto_descuento
 
 
 --
--- TOC entry 3478 (class 0 OID 0)
+-- TOC entry 3553 (class 0 OID 0)
 -- Dependencies: 13
 -- Name: public; Type: ACL; Schema: -; Owner: postgres
 --
@@ -7164,7 +6034,7 @@ GRANT ALL ON SCHEMA public TO postgres;
 GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
--- Completed on 2016-11-24 15:58:29 ECT
+-- Completed on 2016-12-05 10:27:09 ECT
 
 --
 -- PostgreSQL database dump complete

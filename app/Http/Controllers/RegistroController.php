@@ -137,13 +137,31 @@ class RegistroController extends Controller
             });
     }
 
+    public function consultar_SRI($ruc){
+      $res = $this->client->request('GET', config('global.appserviciosnext').'/public/getDatos', ['json' => ['tipodocumento' => 'RUC', 'nrodocumento' => $ruc ]]);
+      $respuesta = json_decode($res->getBody()->getContents() , true);
+      if ($respuesta['datosEmpresa']['valid']!='false') {
+      $modifiedString = str_replace('&nbsp;', null,$respuesta['datosEmpresa']['fecha_inicio_actividades']);
+      $respuesta['datosEmpresa']['fecha_inicio_actividades']=$modifiedString;
+
+      $modifiedString = str_replace('&nbsp;', null, $respuesta['datosEmpresa']['fecha_reinicio_actividades']);
+      $respuesta['datosEmpresa']['fecha_reinicio_actividades']=$modifiedString;
+
+      $modifiedString =str_replace('&nbsp;', null, $respuesta['datosEmpresa']['fecha_actualizacion']);
+      $respuesta['datosEmpresa']['fecha_actualizacion']=$modifiedString;
+
+      return $respuesta;
+    }
+  }
+
     public function Activar_Cuenta(Request $request){
-      $resultado=$this->empresas->select('razon_social')->where('id_estado','P')->where('ruc_ci',$request->input('ruc'))->get();
+      $resultado=$this->empresas->select('razon_social','actividad_economica')->where('id_estado','P')->where('ruc_ci',$request->input('ruc'))->get();
       if (count($resultado)!=0) {
       $data['correo']=$request->input('correo');
       $data['razon_social']=$resultado[0]['razon_social'];
       $data['nombre_comercial']=$resultado[0]['razon_social'];
       $data['user_nextbook']=$request->input('ruc').'@facturanext.com';
+      $actividad_economica=$resultado[0]['actividad_economica'];
       $resultado=$this->empresas->where('ruc_ci',$request->input('ruc'))->first();
       $name=strtolower(substr(str_replace(' ', '_', $resultado['razon_social']),0,11).'_'.$request->input('ruc'));
       //$pass_user=$data['pass_nextbook'];
@@ -171,6 +189,7 @@ class RegistroController extends Controller
                 'schema' => 'usuarios',
                 'sslmode' => 'prefer',
         ));
+          ///CREAR USUARIO
         $id=$this->funciones->generarID();
         $data['pass_nextbook']=$pass_next;
         $usuarios=new Usuarios(); 
@@ -182,12 +201,69 @@ class RegistroController extends Controller
         $usuarios->estado_clave=FALSE;
         $usuarios->fecha_creacion=Carbon::now()->toDateString();
         $usuarios->save();
+        $datos=$this->consultar_SRI($request->input('ruc'));
+        $sucursales=$datos['establecimientos']['sucursal'];
+        $responsable=$datos['establecimientos']['adicional'];
+        //Registrar Empresa
+        $resultado=DB::connection($name)->table('administracion.empresas')->insert([
+           'razon_social'=>$data['razon_social'],
+           'actividad_economica'=>$actividad_economica,
+           'ruc_ci'=>$request->input('ruc'),
+           'nombre_comercial'=>$data['nombre_comercial'],
+           'id_estado'=>'A',
+           'fecha_creacion'=>Carbon::now()->toDateString()
+          ]);
+        //Registrar Persona
+        $datos=$this->consultar_SRI($request->input('ruc'));
+        $resultado=DB::connection('nextbookconex')->select("SELECT * FROM empresa_ruc('".$request->input('ruc')."') LIMIT 1");
+        if (count($resultado)==0) {
+          $resultado=$datos['establecimientos']['sucursal'];
+          $nombre_localidad=explode('/', $resultado[0]['direccion']);
+          $nombre_localidad=str_replace(' ', '', $nombre_localidad[1]);
+          $calle=str_replace(' ', '', $nombre_localidad[2]);
+        }else{
+          $nombre_localidad=$resultado[0]->descripcion_canton;
+          $calle=$resultado[0]->calle;
+        }
 
+        $localizacion=DB::connection('nextbookconex')->select("SELECT id FROM public.view_localidades WHERE nombre= '".$nombre_localidad."'");
+        $datos_repesentante=explode(' ', $responsable['representante_legal']);
+        DB::connection($name)->table('public.personas')->insert([
+            'ci_documento'=>$responsable['cedula'],
+            'primer_nombre'=>$datos_repesentante[2],
+            'segundo_nombre'=>$datos_repesentante[3],
+            'primer_apellido'=>$datos_repesentante[0],
+            'segundo_apellido'=>$datos_repesentante[1],
+            'id_localidad'=>$localizacion[0]->id,
+            'calle'=>$calle,
+          ]);
+        //Registrar Sucursales
+        $persona=DB::connection($name)->table('public.personas')->select('id')->where('ci_documento',$responsable['cedula'])->first();
+        foreach ($sucursales as $key => $value) {
+          $localizacion_array=explode('/', $value['direccion']);
+          $localizacion=DB::connection('nextbookconex')->select("SELECT id FROM public.view_localidades WHERE nombre= '".str_replace(' ', '', $localizacion_array[1])."'");
+          
+          //if (count($localizacion)==0) {
+            $localizacion='00';
+          /*}else{
+            $localizacion=$localizacion[0]->id;
+          }*/
+          $localizacion_sucursal=["direccion"=>$localizacion_array[0].'/'.$localizacion_array[1].'/'.$localizacion_array[2]];
+          $datos_empresariales=['telefono'=>$request->telefono,'telefono1'=>$request->telefono1,'correo'=>$request->correo,'celular'=>$request->celular];
+          DB::connection($name)->table('administracion.sucursales')->insert([
+          'nombre'=>$value['nombre_sucursal'],
+          'responsable'=>$persona->id,
+          'datos_empresariales'=>json_encode($datos_empresariales),
+          'localizacion_sucursal'=>json_encode($localizacion_sucursal),
+          'codigo_sri'=>$value['codigo']
+          ]);
+        }
           $this->enviar_correo_credenciales($data);
           return response()->json(["respuesta"=>true]);
         }
       }
-    }else return response()->json(["respuesta"=>false]);
+    }
+    else return response()->json(["respuesta"=>false]);
       
     }
 

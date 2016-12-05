@@ -20,11 +20,12 @@ class NextbookAuth
      */
     public function handle($request, Closure $next)
     {
-        if ($request->token=='') {
+        /*if ($request->token=='') {
             return response(['error'=>'Sin-Token-de-Seguridad'], 401);
-        }
+        }*/
 
-        $key=config('jwt.secret');
+        try {
+             $key=config('jwt.secret');
         $decoded = JWT::decode($request->token, $key, array('HS256'));
         $name_bdd=$decoded->nbdb;
         $pass_bdd=$decoded->pnb;
@@ -43,14 +44,18 @@ class NextbookAuth
         ));
         $usuarios=new Usuarios(); 
         $usuarios->changeConnection($name_bdd);
-        
-        //return response(['datos'=>$decoded]);
-
         $datos=$usuarios->where('id',$decoded->sub)->get();
         if (count($datos)>0) {
             return $next($request);
         }else{
             return response(['error'=>'Usuario-no-Autorizado'], 401);
+        }
+        }catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+            return response(['error'=>'Token-Expirado'],401);
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+            return response(['error'=>'Token-Invalido'],500);
+        } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
+            return response(['error'=>'Sin-Token-de-Seguridad'], 401);
         }
         
     }
