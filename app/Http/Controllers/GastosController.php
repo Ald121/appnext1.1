@@ -11,9 +11,10 @@ use Config;
 // Funciones
 use App\libs\Funciones;
 
-class GarantiasController extends Controller
+class GastosController extends Controller
 {
-    public function __construct(Request $request){
+
+	public function __construct(Request $request){
         // Funciones
         $this->funciones=new Funciones();
         //Autenticacion
@@ -22,52 +23,50 @@ class GarantiasController extends Controller
         $this->user=$decoded;
         $this->name_bdd=$this->user->nbdb;
     }
-     public function Existencia_Garantia(Request $request)
+    public function Existencia_Gasto(Request $request)
     {
-        $existencia=DB::connection($this->name_bdd)->table('inventario.garantias')->where('estado','A')->where('nombre',$request->nombre)->get();
+        $existencia=DB::connection($this->name_bdd)->table('contabilidad.tipos_gastos_personales')->where('nombre',$request->nombre)->get();
         if (count($existencia)==0) {
             return response()->json(['respuesta' => true], 200);
         }
         return response()->json(['respuesta' => false], 200);
     }
-
-   	public function Add_Garantia(Request $request)
+    public function Add_Gasto(Request $request)
     {
-    DB::connection($this->name_bdd)->table('inventario.garantias')->insert(['nombre' => $request->nombre , 'descripcion' => $request->descripcion ,'tipo_garantia' => $request->tipo_garantia,'duracion' => $request->duracion, 'estado' => 'A', 'fecha' => Carbon::now()->toDateString()]);
+    DB::connection($this->name_bdd)->table('contabilidad.tipos_gastos_personales')->insert(['nombre' => $request->nombre , 'descripcion' => $request->descripcion ,'valor_maximo'=>$request->valor_maximo, 'estado' => 'A']);
     return response()->json(['respuesta' => true], 200);
     }
 
-    public function Get_Garantias(Request $request)
+    public function Get_Gastos(Request $request)
     {
     $currentPage = $request->pagina_actual;
     $limit = $request->limit;
     if ($request->has('filter')&&$request->filter!='') {
         //$data=DB::connection($this->name_bdd)->statement("SELECT * FROM inventario.tipos_categorias WHERE (nombre||descripcion) like '%".$request->input('filter')."%' and estado='A' LIMIT 5");
-        $data=DB::connection($this->name_bdd)->table('inventario.garantias')->where('estado','A')
+        $data=DB::connection($this->name_bdd)->table('contabilidad.tipos_gastos_personales')->where('estado','A')
                                                 ->where('nombre','LIKE','%'.$request->input('filter').'%')
                                                 //->orwhere('descripcion','LIKE','%'.$request->input('filter').'%')
                                                 ->orderBy('nombre','ASC')->get();
     }else{
-        $data=DB::connection($this->name_bdd)->table('inventario.garantias')->where('estado','A')->orderBy('nombre','ASC')->get();
+        $data=DB::connection($this->name_bdd)->table('contabilidad.tipos_gastos_personales')->where('estado','A')->orderBy('nombre','ASC')->get();
     }
     foreach ($data as $key => $value) {
-        $garantia=DB::connection($this->name_bdd)->table('inventario.tipos_garantias')->select('id','nombre','descripcion')->where('id',$value->tipo_garantia)->where('estado','A')->first();
-        $value->tipo_garantia=$garantia;
+        $value->selected=false;
+        $value->total=0;
     }
     $data=$this->funciones->paginarDatos($data,$currentPage,$limit);
-
     return response()->json(['respuesta' => $data], 200);
     }
 
-    public function Update_Garantia(Request $request)
+    public function Update_Gasto(Request $request)
     {
-    $data=DB::connection($this->name_bdd)->table('inventario.garantias')->where('id',$request->id)->update(['nombre' => $request->nombre , 'descripcion' => $request->descripcion ,'tipo_garantia' => $request->tipo_garantia,'duracion' => $request->duracion]);
+    $data=DB::connection($this->name_bdd)->table('contabilidad.tipos_gastos_personales')->where('id',$request->id)->update(['nombre' => $request->nombre , 'descripcion' => $request->descripcion,'valor_maximo'=>$request->valor_maximo]);
     return response()->json(['respuesta' => true], 200);
     }
 
-    public function Delete_Garantia(Request $request)
+    public function Delete_Gasto(Request $request)
     {
-    $data=DB::connection($this->name_bdd)->table('inventario.garantias')->where('id',$request->id)->update(['estado'=>'I']);
+    $data=DB::connection($this->name_bdd)->table('contabilidad.tipos_gastos_personales')->where('id',$request->id)->update(['estado'=>'P']);
     return response()->json(['respuesta' => true], 200);
     }
 }

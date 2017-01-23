@@ -22,7 +22,8 @@ return [
 	'pathPortadaDefault'=>"/storage/default/portada-default.jpg",
 	'pathLogoDefault'=>"/storage/default/logo-default.jpg",
 	'pathPortadaCatalogoDefault'=>"/storage/default/catportada-default.jpg",
-	'pathContraportadaDefault'=>"/storage/default/contraportada-default.jpg"
+	'pathContraportadaDefault'=>"/storage/default/contraportada-default.jpg",
+	'dominio'=>"@nextbook.ec"
 	// 'appnext' => 'https://servicios.nextbook.ec'
 
 ];

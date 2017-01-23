@@ -52,7 +52,7 @@ class PerfilController extends Controller
     $this->tabla_img->where('id_empresa','=',$this->user['id_user'])->update(['estado'=>0]);
     $this->tabla_img->id_img_perfil=$id_img;
     $this->tabla_img->img="storage/app/".$this->user['id_user'].$this->pathImg.$image_name;
-    $this->tabla_img->estado='1';
+    $this->tabla_img->estado='A';
     $this->tabla_img->estado_delete=FALSE;
     $this->tabla_img->id_empresa=$this->user['id_user'];
     $save=$this->tabla_img->save();

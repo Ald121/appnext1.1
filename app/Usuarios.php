@@ -19,7 +19,7 @@ class Usuarios extends Authenticatable
      public $timestamps=false;
      public $incrementing=false;
     protected $fillable = [
-        'id', 'nick', 'clave_clave','estado_clave'
+        'id', 'nick', 'clave_clave','estado_clave','id_tipo_usuario'
     ];
 
     /**

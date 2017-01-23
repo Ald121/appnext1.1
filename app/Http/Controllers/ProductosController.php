@@ -48,7 +48,8 @@ class ProductosController extends Controller
 		'ubicacion'=>$request->ubicacion,
 		'cantidad'=>$request->cantidad,
 		'descripcion'=>$request->descripcion,
-		'codigo_baras'=>$request->codigo_baras
+		'codigo_baras'=>$request->codigo_baras,
+        'tipo_consumo'=>$request->tipo_consumo
     	]);
     return response()->json(['respuesta' => true], 200);
     }
@@ -57,7 +58,32 @@ class ProductosController extends Controller
     {
     $currentPage = $request->pagina_actual;
     $limit = $request->limit;
-    $data=DB::connection($this->name_bdd)->table('inventario.productos')->get();
+    if ($request->has('filter')&&$request->filter!='') {
+        //$data=DB::connection($this->name_bdd)->statement("SELECT * FROM inventario.tipos_categorias WHERE (nombre||descripcion) like '%".$request->input('filter')."%' and estado='A' LIMIT 5");
+        $data=DB::connection($this->name_bdd)->table('inventario.productos')
+                                                ->where('nombre_corto','LIKE','%'.$request->input('filter').'%')
+                                                //->orwhere('descripcion','LIKE','%'.$request->input('filter').'%')
+                                                ->orderBy('nombre_corto','ASC')->get();
+    }else{
+        $data=DB::connection($this->name_bdd)->table('inventario.productos')->orderBy('nombre_corto','ASC')->get();
+    }
+    foreach ($data as $key => $value) {
+        //Get Categoria
+        $categoria=DB::connection($this->name_bdd)->table('inventario.tipos_categorias')->select('nombre')->where('id',$value->categoria)->where('estado','A')->first();
+        $value->categoria=$categoria->nombre;
+        //Get Garantia
+        $garantia=DB::connection($this->name_bdd)->table('inventario.garantias')->select('nombre')->where('id',$value->garantia)->where('estado','A')->first();
+        $value->garantia=$garantia->nombre;
+        //Get Marca
+        $marca=DB::connection($this->name_bdd)->table('inventario.marcas')->select('nombre')->where('id',$value->marca)->where('estado','A')->first();
+        $value->marca=$marca->nombre;
+        //Get Modelo
+        $modelo=DB::connection($this->name_bdd)->table('inventario.modelos')->select('nombre')->where('id',$value->modelo)->where('estado','A')->first();
+        $value->modelo=$modelo->nombre;
+        //Get Ubicacion
+        $ubicacion=DB::connection($this->name_bdd)->table('inventario.ubicaciones')->select('nombre')->where('id',$value->ubicacion)->where('estado','A')->first();
+        $value->ubicacion=$ubicacion->nombre;
+    }
     $data=$this->funciones->paginarDatos($data,$currentPage,$limit);
     return response()->json(['respuesta' => $data], 200);
     }

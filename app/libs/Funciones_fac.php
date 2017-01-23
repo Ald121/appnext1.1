@@ -17,6 +17,7 @@ use Mail;
 use File;
 use Storage;
 use Zipper;
+use DB;
 require_once('barcode.inc.php');
 /* --------------------------------------- Funciones --------------------------------*/
 class Funciones_fac
@@ -27,7 +28,7 @@ class Funciones_fac
         set_time_limit(3000);
         date_default_timezone_set('America/Guayaquil'); //puedes cambiar Guayaquil por tu Ciudad
         setlocale(LC_TIME, 'spanish');
-        $this->persona_q_registra=new regpersona_empresas();
+        //$this->persona_q_registra=new regpersona_empresas();
         $this->pathFacturas  = config('global.pathFacturas');
         $this->pathLocal  = Storage::disk('local')->getDriver()->getAdapter()->getPathPrefix();
     }
@@ -185,10 +186,10 @@ public function getmail($xml){
         return $ruc;
     }
 
-public function leer($usuario,$pass,$iduser,$idsucursal){
+public function leer($usuario,$pass,$name_bdd){
         
 /* connect to gmail with your credentials */
-$hostname = '{s411b.panelboxmanager.com:993/imap/ssl/novalidate-cert}INBOX';
+$hostname = '{52159d79.vps.io-servers.net:993/imap/ssl/novalidate-cert}INBOX';
 $username = $usuario;
 $password = $pass;
 
@@ -211,8 +212,12 @@ if ($emails) {
     foreach ($emails as $email_number) {
         
         /* get information specific to this email */
-        $message = imap_fetchbody($inbox, $email_number, 2);
-        
+        $message = imap_fetchbody($inbox, $email_number, 1);
+        //GET FROM
+        $header = imap_headerinfo($inbox, $email_number);
+        $fromaddr = $header->from[0]->mailbox . "@" . $header->from[0]->host;
+        $subject = imap_utf8($header->subject);
+
         /* get mail structure */
         $structure = imap_fetchstructure($inbox, $email_number);
         
@@ -229,7 +234,11 @@ if ($emails) {
                             'is_attachment' => false,
                             'filename' => '',
                             'name' => '',
-                            'attachment' => ''
+                            'attachment' => '',
+                            'from'=>$fromaddr,
+                            'asunto'=>$subject,
+                            'contenido_correo'=>$message,
+                            'id_correo'=>$email_number
                         );
                 // if($structure->parts[$i]->ifdparameters) 
                 // {
@@ -279,23 +288,37 @@ if ($emails) {
             }
                 
             }
-            imap_clearflag_full($inbox, $email_number, "\\Seen");
+            //imap_clearflag_full($inbox, $email_number, "\\Seen");
+        }else{
+
+          DB::connection($name_bdd)->table('contabilidad.repositorio_facturas_rechazadas')->insert([
+          'clave_acceso'=>'',
+          'razon_rechazo'=>'Sin-Archivo-Adjunto-(xml)',
+          'estado'=>'A',
+          'contenido_correo'=>$message,
+          'emisor_factura'=>$fromaddr,
+          'asunto'=>$subject
+          ]);
+
         }
         
         /* iterate through each attachment and save it */
         foreach ($attachments as $attachment) {
             if ($attachment['is_attachment'] == 1) {
                 $filename = $attachment['name'];
+                $from=$attachment['from'];
+                $asunto=$attachment['asunto'];
+                $contenido_correo=$attachment['contenido_correo'];
+                echo $asunto;
+                $id_correo=$attachment['id_correo'];
                 $file_ext = explode('.', $filename);
-                // echo strtolower($file_ext[1]);
                 if (strtolower($file_ext[1]) == "xml") {
-                 // echo "XML";
-                 $res_xml = $this->save_xml_mail($attachment['attachment'],$username,$filename,$idsucursal);
-                  // print_r($res_xml);
+                 $res_xml = $this->save_xml_mail($attachment['attachment'],$filename,$id_correo,$from,$name_bdd,$asunto,$contenido_correo);
+                 //return $res_xml;
                 }
                 if (strtolower($file_ext[1]) == "zip") {
                  // echo "ZIP";
-                 $res_zip = $this->save_zip_mail($attachment['attachment'],$username,$filename,$idsucursal);
+                 //$res_zip = $this->save_zip_mail($attachment['attachment'],$username,$filename,$idsucursal);
                   // print_r($res_zip);
                 }
             }
@@ -316,7 +339,7 @@ imap_close($inbox);
 // }
     }
 function verificar_autorizacion($clave_acceso){
-        $client = new Client;
+$client = new Client;
 $res = $client->request('POST', config('global.appserviciosnext').'/public/estado_factura', [
     'json' => ["clave"=>(string)$clave_acceso]
 ]);
@@ -326,8 +349,57 @@ return $respuesta;
 }
 
 
-function save_xml_mail($xmlmaster,$emailuser,$doc_name,$idsucursal){
-        $tblFacturas=new Facturas();
+function save_xml_mail($xmlmaster,$doc_name,$id_correo,$emisor_factura,$name_bdd,$asunto,$contenido_correo){
+        
+
+if (strlen($xmlmaster)>150) {
+        
+        $xmlData_sub = new \SimpleXMLElement($xmlmaster);
+if ($xmlData_sub->numeroComprobantes&&(integer)$xmlData_sub->numeroComprobantes>=1) {
+        $xmlDatamaster = $this->uncdata($xmlData_sub->autorizaciones->autorizacion->comprobante);
+        $xmlDatamaster=str_replace('&lt;', '<', $xmlDatamaster);
+        $xmlDatamaster=str_replace('&gt;', '>', $xmlDatamaster);
+        $xmlDatamaster=str_replace('&quot;', '"', $xmlDatamaster);
+        $xmlDatamaster=str_replace('&amp;', '&', $xmlDatamaster);
+        $file_xml = new \SimpleXMLElement($xmlDatamaster);
+}else{
+  if ($xmlData_sub->comprobante) {
+
+      $xmlDatamaster = $this->uncdata($xmlData_sub->comprobante);
+        $xmlDatamaster=str_replace('&lt;', '<', $xmlDatamaster);
+        $xmlDatamaster=str_replace('&gt;', '>', $xmlDatamaster);
+        $xmlDatamaster=str_replace('&quot;', '"', $xmlDatamaster);
+        $xmlDatamaster=str_replace('&amp;', '&', $xmlDatamaster);
+        $file_xml = new \SimpleXMLElement($xmlDatamaster);
+  }
+        //$file_xml = new \SimpleXMLElement($xmlmaster);     
+}
+
+DB::connection($name_bdd)->table('contabilidad.repositorio_facturas_correo')->insert([
+  'clave_acceso'=>$file_xml->infoTributaria->claveAcceso,
+  'id_correo'=>$id_correo,
+  'estado_proceso_factura'=>FALSE,
+  'emisor_factura'=>$emisor_factura,
+  'nombre_archivo'=>$doc_name,
+  'asunto'=>$asunto,
+  'contenido_correo'=>$contenido_correo
+  ]);
+return $file_xml;
+}else{
+
+DB::connection($name_bdd)->table('contabilidad.repositorio_facturas_rechazadas')->insert([
+  'clave_acceso'=>'',
+  'razon_rechazo'=>'Documento-Vacio',
+  'estado'=>'A',
+  'contenido_correo'=>'',
+  'emisor_factura'=>$emisor_factura,
+  'asunto'=>$asunto
+  ]);
+
+}
+
+
+ /*     $tblFacturas=new Facturas();
         $tblFacturas_rechazadas=new FacturasRechazadas();
         $funciones=new Funciones();
         $empresas=new Empresas();
@@ -753,7 +825,7 @@ switch ((string)$tipo_doc) {
     }/// *****if ZIP
     zip_close($zip);
     // echo "<br>".$url_destination;
-    unlink($url_destination);
+    unlink($url_destination);*/
   }
 
 function save_fac_rechazada($xmlmaster,$emailuser,$clave_acceso,$razon,$id_sucursal){
@@ -791,14 +863,13 @@ $sql=$tabla->where('ruc','=',$ruc)->where('id_empresa','=',$id_empresa)->get();
   }
 }
 
-function save_xml_file($xmlmaster,$emailuser,$doc_name,$tipo_consumo,$id_sucursal){
-        $tblFacturas=new Facturas();
-        $tblFacturas_rechazadas=new FacturasRechazadas();
+function save_xml_file($database_name,$xmlmaster,$emailuser,$doc_name,$tipo_consumo){
+        /*$tblFacturas=new Facturas();
+        $tblFacturas_rechazadas=new FacturasRechazadas();*/
         $funciones=new Funciones();
-        $empresas=new Empresas();
+        /*$empresas=new Empresas();
         $passE=new PasswrdsE();
-        $datosPass=$passE->select('id_user')->where('email','=',$emailuser)->get();
-        $doc_name=$doc_name;
+        $datosPass=$passE->select('id_user')->where('email','=',$emailuser)->get();*/
  // if (!is_dir("facturas/".$datosPass[0]['id_user'])) {
  //    mkdir("facturas/".$datosPass[0]['id_user']);      
  //    }
@@ -819,10 +890,10 @@ $razon_social = $file_xml->infoTributaria->razonSocial;
 
 
 $respuesta=$this->verificar_autorizacion($clave_acceso);
-// print_r($respuesta) ;
+ //print_r($respuesta) ;
 
-if (count($respuesta['respuesta']['autorizaciones'])!=0) {
-    $estado=$respuesta['respuesta']['autorizaciones']['autorizacion']['estado'];
+if (count($respuesta['autorizaciones'])!=0) {
+    $estado=$respuesta['autorizaciones']['autorizacion']['estado'];
 
             if($estado == 'AUTORIZADO') {
 
@@ -830,7 +901,7 @@ if (count($respuesta['respuesta']['autorizaciones'])!=0) {
     //****************************************************** NOTA DE CREDITO
   case '04':
                   
-            $xmlComp = new \SimpleXMLElement($respuesta['respuesta']['autorizaciones']['autorizacion']['comprobante']);
+            $xmlComp = new \SimpleXMLElement($respuesta['autorizaciones']['autorizacion']['comprobante']);
             $email = $xmlComp->infoAdicional->campoAdicional;
             $fecha_aut = $xmlComp->infoNotaCredito->fechaEmision;                   
             $razon_social = $xmlComp->infoNotaCredito->razonSocial;
@@ -853,7 +924,7 @@ if (count($respuesta['respuesta']['autorizaciones'])!=0) {
     break;  
 
      case '01':    
-            $xmlComp = new \SimpleXMLElement($respuesta['respuesta']['autorizaciones']['autorizacion']['comprobante']);
+            $xmlComp = new \SimpleXMLElement($respuesta['autorizaciones']['autorizacion']['comprobante']);
             $email = $this->getmail($xmlComp);
             $fecha_aut = $xmlComp->infoFactura->fechaEmision;                   
             //$razon_social = $xmlComp->infoFactura->razonSocial;
@@ -888,14 +959,14 @@ if (count($respuesta['respuesta']['autorizaciones'])!=0) {
                if($ruc != $identificacionComprador) {
               
               $id_fact = $funciones->generarID();
-              $datosPass=$passE->select('id_user')->where('email','=',$emailuser)->get();
-              $res =$tblFacturas->select('id_factura')->where('clave_acceso','=',(string)$clave_acceso)->where('id_empresa','=',$datosPass[0]['id_user'])->get();
+              /*$datosPass=$passE->select('id_user')->where('email','=',$emailuser)->get();*/
+              $res =DB::connection($database_name)->table('contabilidad.repositorio_facturas')->select('id_factura')->where('clave_acceso','=',(string)$clave_acceso)->get();
               if(count($res) == 0 ){
-                $tblFacturas->id_factura = $id_factura;
-                $tblFacturas->num_factura = $num_fac;
-                $tblFacturas->nombre_comercial = $nombre_comercial;
-                $tblFacturas->Ruc_prov = $ruc_comercial;
-                $tblFacturas->fecha_emision = $date_fe;
+                /*$tblFacturas->id_factura = ;
+                $tblFacturas->num_factura = ;
+                $tblFacturas->nombre_comercial = ;
+                $tblFacturas->Ruc_prov = ;
+                $tblFacturas->fecha_emision = ;
                 $tblFacturas->clave_acceso = (string)$clave_acceso;
                 $tblFacturas->ambiente = (string)$ambiente;
                 $tblFacturas->tipo_doc = $tipo_doc;
@@ -912,14 +983,53 @@ if (count($respuesta['respuesta']['autorizaciones'])!=0) {
                 $tblFacturas->propina= $propina;
                 $tblFacturas->estado= 1;
                 $tblFacturas->estado_view= 1;
-                $tblFacturas->contenido_fac = $respuesta['respuesta']['autorizaciones']['autorizacion']['comprobante'];
+                $tblFacturas->contenido_fac = $respuesta['autorizaciones']['autorizacion']['comprobante'];
                 $tblFacturas->id_empresa = $datosPass[0]['id_user'];
                 $tblFacturas->id_sucursal = $id_sucursal;
-                $save=$tblFacturas->save();
+                $save=$tblFacturas->save();*/
+                $save=DB::connection($database_name)->table('contabilidad.repositorio_facturas')->insert([
+                //'id_factura'=>$id_factura,
+                'num_factura'=>$num_fac,
+                'nombre_comercial'=>$nombre_comercial,
+                'ruc_prov'=>$ruc_comercial,
+                'tipo_doc'=>$tipo_doc,
+                'clave_acceso'=>(string)$clave_acceso,
+                //'tipo_consumo'=>$tipo_consumo,
+                'total'=>$total,
+                'contenido_fac'=>json_encode($xmlComp),
+                //'id_sucursal'=>$id_sucursal,
+                'fecha_emision'=>$date_fe,
+                'subtotal_12'=>$subtotal_12,
+                'subtotal_0'=>$subtotal_0,
+                'subtotal_no_sujeto'=>$subtotal_no_sujeto,
+                'subtotal_exento_iva'=>$subtotal_exento_iva,
+                'subtotal_sin_impuestos'=>$subtotal_sin_impuestos,
+                'descuento'=>$descuento,
+                'ice'=>$ice,
+                'iva_12'=>$iva_12,
+                'propina'=>$propina,
+                'estado'=>'A',
+                'estado_view'=>'P'
+                  ]);
+
                 if ($save) {
+
+                  switch ($tipo_doc) {
+                    case '01':
+                      $tipo_doc='factura';
+                      break;
+                  }
+                  return array(
+                    'respuesta' => true, 
+                    'total' => $total,
+                    'clave_acceso' => (string)$clave_acceso,
+                    'tipo_comprobante'=>$tipo_doc,
+                    'ruc-emisor'=>$ruc_comercial,
+                    'numero_autorizacion'=>$respuesta['autorizaciones']['autorizacion']['numeroAutorizacion'],
+                    'fecha_aut'=>$fecha_aut);
                   // echo "OK XML--";
-                  $url_destination_xml = "/".$datosPass[0]['id_user'].$this->pathFacturas.$id_factura.'.xml'; 
-                  Storage::disk('local')->put($url_destination_xml, $xmlmaster);                
+                  /*$url_destination_xml = "/".$datosPass[0]['id_user'].$this->pathFacturas.$id_factura.'.xml'; 
+                  Storage::disk('local')->put($url_destination_xml, $xmlmaster);   */             
                   // $fp_fac = fopen($url_destination_xml, "wr+");
                   // fwrite($fp_fac, $xmlmaster);
                   // fclose($fp_fac);

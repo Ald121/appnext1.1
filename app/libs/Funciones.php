@@ -73,7 +73,7 @@ class Funciones
       });
     $currentPage = LengthAwarePaginator::resolveCurrentPage();
     $collection = new Collection($datos);
-    $currentPageSearchResults = $collection->forPage($currentPage, $perPage)->all();
+    $currentPageSearchResults = $collection->forPage($currentPage, $perPage)->values()->all();
     $paginatedSearchResults = new LengthAwarePaginator($currentPageSearchResults, count($collection) , $perPage);
 
     return $paginatedSearchResults;

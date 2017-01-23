@@ -160,7 +160,7 @@ class RegistroController extends Controller
       $data['correo']=$request->input('correo');
       $data['razon_social']=$resultado[0]['razon_social'];
       $data['nombre_comercial']=$resultado[0]['razon_social'];
-      $data['user_nextbook']=$request->input('ruc').'@facturanext.com';
+      $data['user_nextbook']=$request->input('ruc').config('global.dominio');
       $actividad_economica=$resultado[0]['actividad_economica'];
       $resultado=$this->empresas->where('ruc_ci',$request->input('ruc'))->first();
       $name=strtolower(substr(str_replace(' ', '_', $resultado['razon_social']),0,11).'_'.$request->input('ruc'));
@@ -174,8 +174,9 @@ class RegistroController extends Controller
         $update=DB::connection('usuarioconex')->table('usuarios')
             ->where('id', $request->input('ruc'))
                                   ->update(array('id_estado' => 'A','clave_clave'=>bcrypt($request->input('ruc')),'mail'=>$request->input('ruc').'@oyefm.com','clave_mail'=>$pass_email));
-        $update=$this->empresas->where('ruc_ci',$request->input('ruc'))->update(['id_estado' => 'A']);
+        $update=$this->empresas->where('ruc_ci',$request->input('ruc'))->update(['id_estado' => 'A','correo_institucional'=>$request->input('ruc').'@'.config('global.dominio'),'clave_correo_institucional'=>$pass_email]);
         if ($update) {
+          //Crear Email
           $this->crear_email($request->input('ruc'),$pass_email);
           Config::set('database.connections.'.$name, array(
                 'driver' => 'pgsql',
@@ -195,12 +196,16 @@ class RegistroController extends Controller
         $usuarios=new Usuarios(); 
         $usuarios->changeConnection($name);
         $usuarios->id=$id;
-        $usuarios->nick=$request->input('ruc').'@facturanext.com';
+        $usuarios->nick='admin'.config('global.dominio');
         $usuarios->clave_clave=bcrypt($pass_next);
         $usuarios->id_estado='A';
         $usuarios->estado_clave=FALSE;
+        $usuarios->id_tipo_usuario=1;
         $usuarios->fecha_creacion=Carbon::now()->toDateString();
         $usuarios->save();
+        //ID DE USUARIO
+        $id_usuario=$usuarios->id;
+
         $datos=$this->consultar_SRI($request->input('ruc'));
         $sucursales=$datos['establecimientos']['sucursal'];
         $responsable=$datos['establecimientos']['adicional'];
@@ -211,9 +216,9 @@ class RegistroController extends Controller
            'ruc_ci'=>$request->input('ruc'),
            'nombre_comercial'=>$data['nombre_comercial'],
            'id_estado'=>'A',
-           'fecha_creacion'=>Carbon::now()->toDateString()
+           'fecha'=>Carbon::now()->toDateString()
           ]);
-        //Registrar Persona
+        //GET Sucursales SRI
         $datos=$this->consultar_SRI($request->input('ruc'));
         $resultado=DB::connection('nextbookconex')->select("SELECT * FROM empresa_ruc('".$request->input('ruc')."') LIMIT 1");
         if (count($resultado)==0) {
@@ -228,17 +233,62 @@ class RegistroController extends Controller
 
         $localizacion=DB::connection('nextbookconex')->select("SELECT id FROM public.view_localidades WHERE nombre= '".$nombre_localidad."'");
         $datos_repesentante=explode(' ', $responsable['representante_legal']);
-        DB::connection($name)->table('public.personas')->insert([
-            'ci_documento'=>$responsable['cedula'],
-            'primer_nombre'=>$datos_repesentante[2],
-            'segundo_nombre'=>$datos_repesentante[3],
-            'primer_apellido'=>$datos_repesentante[0],
-            'segundo_apellido'=>$datos_repesentante[1],
-            'id_localidad'=>$localizacion[0]->id,
-            'calle'=>$calle,
+          //Registrar Persona
+          DB::connection($name)->table('public.personas')->insert(
+          [
+          'primer_nombre'=>$datos_repesentante[2],
+           'segundo_nombre'=>$datos_repesentante[3],
+           'primer_apellido'=>$datos_repesentante[0],
+           'segundo_apellido'=>$datos_repesentante[1],
+           'id_localidad'=>$localizacion[0]->id,
+           'calle'=>$calle,
+           'transversal'=>null,
+           'numero'=>null
           ]);
+          $id_persona=DB::connection($name)->table('public.personas')->select('id')->where('primer_nombre',$datos_repesentante[2])->first();
+          // Guardar Documento
+          $actual_date=Carbon::now()->setTimezone('America/Guayaquil')->toDateTimeString();
+          DB::connection($name)->table('public.personas_documentos_identificacion')->insert(
+          [
+          'id_persona'=>$id_persona->id,
+           'id_tipo_documento'=>1,
+           'numero_identificacion'=>$responsable['cedula'],
+           'estado'=>'A',
+           'fecha'=>$actual_date
+          ]);
+          //Guardar Correo
+          $actual_date=Carbon::now()->setTimezone('America/Guayaquil')->toDateTimeString();
+          DB::connection($name)->table('public.personas_correo_electronico')->insert(
+          [
+          'id_persona'=>$id_persona->id,
+           'correo_electronico'=>$request->input('correo'),
+           'estado'=>'A',
+           'fecha'=>$actual_date
+          ]);
+          //Guardar Telefono
+          $array_telefono=['telefono'=>$request->input('telefono'),'telefono'=>$request->input('telefono1')];
+          //Guardar Empleado
+          DB::connection($this->name_bdd)->table('talento_humano.empleados')->insert(
+          [
+          'id_persona'=>$id_persona->id,
+          'id_usuario'=>$id_usuario,
+          'estado'=>'A'
+          ]);
+
+          foreach ($array_telefono as $key => $value) {
+            $actual_date=Carbon::now()->setTimezone('America/Guayaquil')->toDateTimeString();
+            DB::connection($name)->table('public.telefonos_personas')->insert(
+            [
+            'id_persona'=>$id_persona->id,
+             'numero'=>$value,
+             'estado'=>'A',
+             'fecha'=>$actual_date,
+             'id_operadora_telefonica'=>1
+            ]);
+          }
+
         //Registrar Sucursales
-        $persona=DB::connection($name)->table('public.personas')->select('id')->where('ci_documento',$responsable['cedula'])->first();
+        //$id_persona=DB::connection($name)->table('public.personas')->select('id')->where('ci_documento',$responsable['cedula'])->first();
         foreach ($sucursales as $key => $value) {
           $localizacion_array=explode('/', $value['direccion']);
           $localizacion=DB::connection('nextbookconex')->select("SELECT id FROM public.view_localidades WHERE nombre= '".str_replace(' ', '', $localizacion_array[1])."'");
@@ -252,7 +302,7 @@ class RegistroController extends Controller
           $datos_empresariales=['telefono'=>$request->telefono,'telefono1'=>$request->telefono1,'correo'=>$request->correo,'celular'=>$request->celular];
           DB::connection($name)->table('administracion.sucursales')->insert([
           'nombre'=>$value['nombre_sucursal'],
-          'responsable'=>$persona->id,
+          'responsable'=>$id_persona->id,
           'datos_empresariales'=>json_encode($datos_empresariales),
           'localizacion_sucursal'=>json_encode($localizacion_sucursal),
           'codigo_sri'=>$value['codigo']
@@ -269,11 +319,11 @@ class RegistroController extends Controller
 
     private function crear_email($user,$email_pass)
     {
-        $ip           = "oyefm.com"; 
+        $ip           = config('global.dominio'); 
         $account      = "oyefm"; 
         $passwd       = "FRf74G7oW,$0yTQ"; 
         $port         = 2083; 
-        $email_domain = 'oyefm.com'; 
+        $email_domain = config('global.dominio'); 
         $email_quota  = 50; 
         $xmlapi       = new xmlapi($ip);
         $xmlapi->set_port($port); 
@@ -321,6 +371,11 @@ class RegistroController extends Controller
     public function Get_Provincias(Request $request){
 
       $resultado=DB::connection('localidadesconex')->select("SELECT nombre,id,codigo_telefonico FROM view_localidades WHERE id_padre='00' ORDER BY nombre ASC");
+      return response()->json(["respuesta" => $resultado], 200);
+    }
+    public function Get_Ciudades(Request $request){
+
+      $resultado=DB::connection('localidadesconex')->select("SELECT nombre,id,codigo_telefonico FROM view_localidades WHERE length(id_padre)=2 and nombre!='ECUADOR' ORDER BY nombre ASC");
       return response()->json(["respuesta" => $resultado], 200);
     }
 }
